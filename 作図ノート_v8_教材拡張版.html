@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>作図ノート v8 — 教材拡張版（TikZ強化・協働共有・課題充実・再生高度化）</title>
+<style>
+:root{
+  --paper:#fffdf7;--paper2:#f3ead9;--ink:#25354c;--muted:#758499;--line:#d9e2ee;
+  --blue:#2f7dd3;--green:#1f9b72;--orange:#d87824;--rose:#c45d7a;--violet:#6d68c9;--red:#c43f4a;
+  --panel:#ffffff;--soft:#f6f9fd;--shadow:0 1px 2px rgba(27,43,64,.05),0 12px 30px -18px rgba(27,43,64,.40);
+  --radius:14px;--s1:7px;--s2:11px;--s3:15px;--s4:22px;
+}
+*{box-sizing:border-box}html,body{height:100%;margin:0;background:#e8edf5;color:var(--ink);font-family:"Hiragino Sans","Yu Gothic","Noto Sans JP",system-ui,sans-serif}button,input,select,textarea{font:inherit}
+#app{display:grid;grid-template-columns:116px minmax(390px,1fr) 392px;height:100vh;overflow:hidden}.panel{background:rgba(255,255,255,.97);box-shadow:var(--shadow)}
+#tools{padding:8px 7px;overflow:auto;z-index:4}.brand{font-weight:900;font-size:12px;line-height:1.25;text-align:center;margin:4px 0 8px;color:#2b405b}.field{margin:8px 0}.field label{display:block;font-size:10px;color:var(--muted);margin:0 0 4px;text-align:center}.field select{width:100%;border:1px solid #d8e1ed;border-radius:10px;background:#f7f9fc;color:var(--ink);padding:6px 4px;font-size:11px}.grp{font-size:10px;color:#96a3b4;text-align:center;margin:10px 0 4px;letter-spacing:.06em}.btn{width:100%;border:1px solid transparent;background:#f5f8fc;border-radius:12px;padding:7px 2px;margin:3px 0;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;color:var(--ink);transition:.12s ease;user-select:none}.btn:hover{background:#e8f1fb;transform:translateY(-1px)}.btn.active{background:var(--blue);border-color:var(--blue);color:white;box-shadow:0 5px 15px -8px rgba(47,125,211,.8)}.btn.reco{border-color:#78c8a8;box-shadow:inset 0 0 0 1px rgba(31,155,114,.25)}.btn.dim{opacity:.42}.btn svg{width:25px;height:25px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}.btn:focus-visible,#topbar button:focus-visible,#side button:focus-visible,select:focus-visible,textarea:focus-visible,input:focus-visible{outline:3px solid #ffbf47;outline-offset:2px}
+#stage{position:relative;min-width:0;background:var(--paper2)}#board{width:100%;height:100%;display:block;touch-action:none;cursor:crosshair;background:linear-gradient(0deg,transparent 23px,var(--line) 24px),linear-gradient(90deg,transparent 23px,var(--line) 24px),linear-gradient(0deg,transparent 119px,rgba(47,125,211,.22) 120px),linear-gradient(90deg,transparent 119px,rgba(47,125,211,.22) 120px);background-size:24px 24px,24px 24px,120px 120px,120px 120px;background-color:var(--paper)}
+#topbar{position:absolute;top:10px;left:50%;transform:translateX(-50%);display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:center;background:rgba(255,255,255,.94);backdrop-filter:blur(5px);border:1px solid rgba(216,225,237,.8);border-radius:16px;box-shadow:var(--shadow);padding:7px;max-width:calc(100% - 24px)}#topbar button,#side button,.filelabel{border:1px solid #dbe4ef;background:#f7f9fc;border-radius:10px;color:var(--ink);padding:7px 10px;cursor:pointer;font-size:12px;white-space:nowrap;display:inline-flex;align-items:center;gap:4px;text-decoration:none}#topbar button:hover,#side button:hover,.filelabel:hover{background:#eaf2fb}.filelabel input{display:none}.toggle{display:inline-flex;align-items:center;gap:4px;border:1px solid #dbe4ef;background:#f7f9fc;border-radius:10px;padding:7px 10px;font-size:12px;cursor:pointer}
+#hint{position:absolute;left:14px;bottom:14px;max-width:min(760px,calc(100% - 28px));background:rgba(38,54,77,.93);color:white;border-radius:14px;padding:10px 14px;font-size:13px;line-height:1.7;box-shadow:var(--shadow)}.toast{position:absolute;right:14px;bottom:14px;background:#1f6f55;color:white;border-radius:12px;padding:10px 13px;font-size:12px;box-shadow:var(--shadow);opacity:0;transform:translateY(8px);transition:.2s ease;pointer-events:none}.toast.show{opacity:1;transform:none}.toast.bad{background:#b33a3a}.toast.warn{background:#9a6418}
+#side{border-left:1px solid #dae3ee;overflow:auto;padding:14px}.card{background:var(--panel);border:1px solid #dde6f0;border-radius:var(--radius);box-shadow:0 8px 22px -20px rgba(38,54,77,.45);padding:13px;margin-bottom:12px}.card h2{font-size:15px;margin:0 0 8px;color:#26364d;display:flex;align-items:center;gap:6px}.card h3{font-size:13px;margin:12px 0 6px;color:#3d506a}.card p,.card li{font-size:12px;line-height:1.75;color:#495970}.card ul,.card ol{padding-left:1.3em;margin:.4em 0}.pill{display:inline-block;background:#e9f5ff;color:#2468aa;border:1px solid #cfdef0;border-radius:999px;padding:2px 8px;font-size:11px;margin:2px 3px 2px 0}.pill.green{background:#e9f8f2;color:#137a59;border-color:#c8eadc}.pill.orange{background:#fff2e7;color:#9a541d;border-color:#f2d5ba}.pill.violet{background:#f0efff;color:#504bb2;border-color:#d7d5ff}.pill.red{background:#fff0f1;color:#9f2430;border-color:#f0c4ca}.small{font-size:11px!important;color:var(--muted)!important;line-height:1.65!important}.row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.row button{flex:1}.hidden{display:none!important}#readVal{font-size:12px;line-height:1.8;min-height:44px;font-variant-numeric:tabular-nums}.muted{color:var(--muted)}
+.lessonBox{border-left:4px solid var(--blue);background:#f0f7ff;border-radius:10px;padding:10px;margin-top:8px;font-size:12px;line-height:1.75}.stepbox{border-left:4px solid var(--green);background:#f0fbf7;border-radius:10px;padding:10px;margin-top:8px;font-size:12px;line-height:1.75;color:#364a3f}.hintLevel{border-left:4px solid var(--orange);background:#fff7ef;border-radius:10px;padding:10px;margin-top:8px;font-size:12px;line-height:1.75;color:#5a4232}.proofBox{border-left:4px solid var(--violet);background:#f6f5ff;border-radius:10px;padding:10px;margin-top:8px;font-size:12px;line-height:1.75}.judgeBox{border-left:4px solid var(--red);background:#fff5f6;border-radius:10px;padding:10px;margin-top:8px;font-size:12px;line-height:1.75;color:#623038}.blank{display:inline-block;min-width:5.5em;border-bottom:2px solid #8798aa;color:#1f6f55;font-weight:800;padding:0 3px;text-align:center}.memo{width:100%;min-height:58px;border:1px solid #d8e1ed;border-radius:10px;padding:8px;background:#fbfdff;resize:vertical;font-size:12px;line-height:1.6}.cards{display:flex;flex-wrap:wrap;gap:5px;margin:6px 0}.eCard{border:1px solid #d8e1ed;border-radius:999px;padding:4px 8px;background:#fff;cursor:pointer;font-size:11px}.eCard.selected{background:#e9f8f2;border-color:#80cdae;color:#137a59;font-weight:700}.log{max-height:130px;overflow:auto;background:#fbfdff;border:1px solid #dfe7f1;border-radius:10px;padding:7px;margin-top:8px}.log div{font-size:11px;line-height:1.55;color:#5b697d;border-bottom:1px dashed #e5ebf3;padding:2px 0}.log div:last-child{border-bottom:none}.allowed{font-size:11px;color:#137a59;margin-top:6px}.checklist label{display:block;font-size:12px;line-height:1.7;color:#42536a;margin:4px 0}.checklist input{margin-right:6px}.teacherGrid{display:grid;gap:6px}.teacherGrid input,.teacherGrid textarea{width:100%;border:1px solid #d8e1ed;border-radius:10px;padding:7px;background:#fbfdff;font-size:12px}.teacherGrid textarea{min-height:54px;resize:vertical}.currMap{max-height:260px;overflow:auto;border:1px solid #dfe7f1;border-radius:10px}.currMap table{border-collapse:collapse;width:100%;font-size:11px}.currMap th{position:sticky;top:0;background:#eef5ff;color:#33445c;z-index:1}.currMap th,.currMap td{border-bottom:1px solid #e5ebf3;padding:6px;vertical-align:top}.currMap td{color:#4b5b70}.tabs{display:flex;gap:4px;margin-bottom:8px}.tab{flex:1;justify-content:center}.tab.active{background:#e9f5ff;border-color:#9fc7ef;color:#2468aa;font-weight:700}.audit{max-height:118px;overflow:auto;background:#fbfdff;border:1px solid #dfe7f1;border-radius:10px;padding:7px;margin-top:8px}.audit div{font-size:11px;line-height:1.55;color:#52657d;border-bottom:1px dashed #e5ebf3;padding:2px 0}.audit b{color:#2468aa}.scoreBox{border-left:4px solid #2f7dd3;background:#f4f9ff;border-radius:10px;padding:10px;margin-top:8px;font-size:12px;line-height:1.75}.kw{display:inline-block;border:1px solid #d8e1ed;border-radius:999px;padding:2px 7px;margin:2px;font-size:11px;background:#fff}.kw.hit{background:#e9f8f2;border-color:#86cdae;color:#137a59;font-weight:700}.currMap tr{cursor:pointer}.currMap tr:hover td{background:#f7fbff}
+/* === v7追加: アクセシビリティ === */
+.colorblind-mode .obj-point{stroke-width:2.5px}
+.colorblind-mode .obj-point[data-shape="circle"]{fill:#fff;stroke:#2563eb}
+.colorblind-mode .obj-point[data-shape="triangle"]{fill:#fff;stroke:#dc2626}
+.colorblind-mode .obj-point[data-shape="square"]{fill:#fff;stroke:#16a34a}
+.colorblind-mode .obj-line[data-style="dashed"]{stroke-dasharray:6,4}
+.colorblind-mode .obj-line[data-style="dotted"]{stroke-dasharray:2,3}
+
+/* === v7追加: 試行錯誤可視化 === */
+.trialBox{background:#fff9ed;border-left:4px solid #f59e0b;border-radius:10px;padding:8px;font-size:12px;line-height:1.7;margin-top:6px}
+.trialTag{display:inline-block;background:#fef3c7;color:#92400e;border-radius:6px;padding:2px 8px;font-size:11px;margin-right:4px}
+.trialError{background:#fef2f2;border-left-color:#ef4444}
+.trialError .trialTag{background:#fee2e2;color:#991b1b}
+
+/* === v7追加: 証明文章化 === */
+.proofSentenceBox{background:#f8f9ff;border:1px solid #e0e3ff;border-radius:10px;padding:10px;font-size:12px;line-height:1.8}
+.proofSentenceRow{display:flex;gap:6px;align-items:flex-start;margin-bottom:6px}
+.proofSentenceRow select{min-width:90px;border:1px solid #d8dcf0;border-radius:8px;padding:5px;background:#fff;font-size:12px}
+.proofSentenceRow textarea{flex:1;border:1px solid #d8dcf0;border-radius:8px;padding:5px;font-size:12px;min-height:28px;resize:vertical}
+.proofPartLabel{min-width:52px;color:#514cb2;font-weight:700;font-size:11px;padding-top:6px}
+
+/* === v7追加: 縦接続 === */
+.prereqBox{background:#f0f9ff;border-left:4px solid #0ea5e9;border-radius:10px;padding:8px;font-size:12px;line-height:1.7;margin-top:6px}
+.prereqTag{display:inline-block;background:#e0f2fe;color:#0369a1;border-radius:6px;padding:2px 8px;font-size:11px;margin-right:4px}
+.nextUnitBox{background:#f5f3ff;border-left:4px solid #8b5cf6;border-radius:10px;padding:8px;font-size:12px;line-height:1.7;margin-top:6px}
+.nextUnitTag{display:inline-block;background:#ede9fe;color:#5b21b6;border-radius:6px;padding:2px 8px;font-size:11px;margin-right:4px}
+
+/* === v7追加: 印刷ワークシート === */
+.worksheetPreview{background:#fff;border:2px dashed #cbd5e1;border-radius:12px;padding:16px;font-size:12px;line-height:1.8}
+.worksheetSection{margin-bottom:14px;padding-bottom:10px;border-bottom:1px dashed #e2e8f0}
+.worksheetTitle{font-size:14px;font-weight:800;color:#1e293b;margin-bottom:6px}
+.worksheetGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media print{.no-print{display:none}.worksheetPreview{border:none}}
+
+/* === v7追加: 協働モード === */
+.collabStatus{font-size:11px;color:#475569;background:#f1f5f9;border-radius:8px;padding:6px 10px}
+.collabPeer{display:inline-flex;align-items:center;gap:4px;background:#e0e7ff;color:#3730a3;border-radius:6px;padding:2px 8px;font-size:11px;margin-right:4px}
+/* === v8フェーズ3: 協働共有強化 === */
+.peerAdded{background:#dcfce7;border-left:3px solid #22c55e;border-radius:6px;padding:4px 8px;margin-bottom:3px;font-size:11px}
+.peerRemoved{background:#fee2e2;border-left:3px solid #ef4444;border-radius:6px;padding:4px 8px;margin-bottom:3px;font-size:11px}
+.peerModified{background:#fef9c3;border-left:3px solid #eab308;border-radius:6px;padding:4px 8px;margin-bottom:3px;font-size:11px}
+.collabLogEntry{display:flex;gap:6px;align-items:flex-start;margin-bottom:4px;font-size:11px}
+.collabLogTime{color:#94a3b8;white-space:nowrap}
+.collabLogPeer{color:#3730a3;background:#e0e7ff;border-radius:4px;padding:1px 6px;font-size:10px}
+.collabLogAction{flex:1}
+
+
+/* === v7追加: 長期保存 === */
+.historyThumb{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
+.historyItem{border:1px solid #e2e8f0;border-radius:10px;padding:8px;text-align:center;font-size:11px;cursor:pointer}
+.historyItem:hover{border-color:#93c5fd;background:#f8fafc}
+.historyItem .date{color:#64748b;font-size:10px}
+
+/* === v7追加: 外部連携 === */
+.exportCodeBox{background:#0f172a;color:#e2e8f0;border-radius:10px;padding:12px;font-family:ui-monospace,monospace;font-size:11px;line-height:1.7;overflow:auto;max-height:200px}
+.rubricGrid{display:grid;gap:6px}.rubricItem{display:grid;grid-template-columns:1fr 54px;gap:6px;align-items:center;border:1px solid #dfe7f1;border-radius:10px;padding:7px;background:#fbfdff}.rubricItem label{font-size:11px;color:#40536c}.rubricItem input{width:100%;border:1px solid #d8e1ed;border-radius:8px;padding:5px;background:#fff}.scoreBig{font-size:22px;font-weight:900;color:#2468aa}.submitTable{max-height:260px;overflow:auto;border:1px solid #dfe7f1;border-radius:10px}.submitTable table{border-collapse:collapse;width:100%;font-size:11px}.submitTable th{position:sticky;top:0;background:#eef5ff;z-index:1}.submitTable th,.submitTable td{border-bottom:1px solid #e5ebf3;padding:6px;vertical-align:top}.scenarioSteps{display:grid;gap:6px}.scenarioStep{border-left:4px solid #6d68c9;background:#f7f6ff;border-radius:10px;padding:8px;font-size:12px;line-height:1.7}.scenarioStep b{color:#514cb2}.packBox{border-left:4px solid #1f9b72;background:#f1fbf7;border-radius:10px;padding:8px;font-size:12px;line-height:1.7}.replayBar{display:flex;gap:5px;align-items:center;flex-wrap:wrap}.replayBar button{flex:1}.replayState{font-size:11px;color:#52657d;background:#fbfdff;border:1px solid #dfe7f1;border-radius:10px;padding:7px;margin-top:6px}
+.obj-line{stroke:#4b5d78;stroke-width:2.2;fill:none;vector-effect:non-scaling-stroke}.obj-circle{stroke:var(--rose);stroke-width:2.2;fill:none;vector-effect:non-scaling-stroke}.obj-aux{stroke:var(--rose);stroke-width:1.5;stroke-dasharray:5 4;fill:none;opacity:.75;vector-effect:non-scaling-stroke}.obj-construct{stroke:#8aa0bc;stroke-width:1.8;stroke-dasharray:6 5;fill:none;vector-effect:non-scaling-stroke}.measure{fill:#137a59;font-size:12px;font-weight:700;paint-order:stroke;stroke:#fff;stroke-width:4;stroke-linejoin:round}.pt{stroke:white;stroke-width:1.7;cursor:grab}.pt.free{fill:var(--blue)}.pt.on{fill:var(--green)}.pt.inter{fill:var(--orange)}.pt-hit{fill:transparent;cursor:grab}.lbl{font-size:13px;fill:#26364d;font-weight:800;paint-order:stroke;stroke:#fff;stroke-width:4;stroke-linejoin:round;user-select:none}.selring{fill:none;stroke:#ffbf47;stroke-width:2.5;stroke-dasharray:4 3}
+@media(max-width:1080px){#app{grid-template-columns:104px 1fr}#side{position:absolute;right:8px;top:72px;width:min(380px,calc(100vw - 122px));max-height:calc(100vh - 86px);border:1px solid #dae3ee;border-radius:16px;z-index:5}.brand{font-size:11px}#topbar{left:8px;transform:none;max-width:calc(100% - 16px);justify-content:flex-start}.btn{font-size:9px}}
+@media print{#tools,#topbar,#side,#hint,.toast{display:none!important}#app{display:block}#stage{height:100vh}body{background:white}@page{size:A4 landscape;margin:10mm}}
+</style>
+</head>
+<body>
+<div id="app">
+  <aside id="tools" class="panel" aria-label="作図ツール">
+    <div class="brand">作図ノート<br>v8</div>
+    <div class="field"><label for="gradeSelect">学年</label><select id="gradeSelect"><option value="elementary">小学校</option><option value="middle" selected>中学校</option><option value="high">高校</option><option value="all">先生</option></select></div>
+    <div class="field"><label for="unitSelect">単元</label><select id="unitSelect"></select></div>
+    <div class="field"><label for="activitySelect">使い方</label><select id="activitySelect"><option value="free">自由探索</option><option value="lesson">授業課題</option><option value="construction">作図手順</option><option value="teacher">先生課題作成</option></select></div>
+    <div id="toolButtons"></div>
+  </aside>
+  <main id="stage">
+    <svg id="board" role="img" aria-label="方眼ノート型の作図キャンバス"></svg>
+    <div id="topbar">
+      <button data-cmd="undo">↶ もどす</button><button data-cmd="clear">🗑 全消去</button>
+      <button data-cmd="save">💾 保存</button><label class="filelabel">📂 読込<input id="loadFile" type="file" accept="application/json,.json" /></label>
+      <button data-cmd="submit">📤 提出</button><button data-cmd="png">🖼 PNG</button><button data-cmd="svg">SVG</button><button data-cmd="share">🔗 URL</button>
+      <label class="toggle"><input type="checkbox" id="labelToggle" checked>記号</label><label class="toggle"><input type="checkbox" id="stepLock" checked>手順ロック</label>
+    </div>
+    <div id="hint"></div><div class="toast" id="toast"></div>
+  </main>
+  <aside id="side" class="panel">
+    <section class="card"><h2>単元プリセット</h2><div id="unitInfo"></div><div class="field"><label for="templateSelect">課題テンプレート</label><select id="templateSelect"></select></div><div class="row"><button id="unitSceneBtn">選んだ課題の図を作る</button><button id="mapJumpBtn">単元マップ</button></div></section>
+    <section class="card"><h2>協働モード</h2><p class="small">2人で同じ図を編集し、相手の操作を確認できます。（※簡易版：同一ブラウザ内の状態共有）</p>
+    <div id="collabStatus" class="collabStatus">協働モードはオフです</div>
+    <div class="row" style="margin-top:8px"><button id="toggleCollab">協働モードON/OFF</button><button id="comparePeer">相手と比較</button></div>
+    <div id="peerDiffPanel" style="margin-top:6px;font-size:11px;color:#475569"></div></section>
+    <section class="card"><h2>課題パック</h2><div id="packInfo" class="packBox">内蔵テンプレートを使用中です。学校・先生・単元ごとのJSON課題パックを読み込めます。</div><div class="row" style="margin-top:8px"><label class="filelabel">課題パック読込<input id="taskPackFile" type="file" accept="application/json,.json" /></label><button id="exportTaskPack">課題パック書出</button></div><p class="small">形式：{ packName, templates:{ unitType:[課題...] }, scenarios:{ unitType:{...} } }</p></section>
+    <section class="card" id="lessonPanel"><h2>授業課題</h2><div id="lessonPrompt" class="lessonBox"></div><div class="checklist" id="lessonChecklist"></div><div class="row" style="margin-top:8px"><button id="hintBtn">ヒントを1つ出す</button><button id="resetHints">ヒントを戻す</button></div><div id="lessonHint" class="hintLevel hidden"></div></section>
+    <section class="card"><h2>授業シナリオ</h2><div id="scenarioPanel" class="scenarioSteps"></div><div class="row" style="margin-top:8px"><button id="exportScenario">シナリオJSON</button><button id="copyScenario">シナリオ要約</button></div></section>
+    <section class="card"><h2>観察メモ</h2><textarea id="memoText" class="memo" placeholder="例：Pを動かしても∠APBと∠AQBは同じように見える。"></textarea><div class="row" style="margin-top:8px"><button id="analyzeMemo">メモ分析</button><button id="copyMemoSummary">先生用要約</button></div><div id="memoScore" class="scoreBox hidden"></div></section>
+    <section class="card"><h2>根拠カード</h2><div id="evidenceCards" class="cards"></div><p class="small">証明に使えそうな根拠を選びます。選んだカードは提出データにも含まれます。</p></section>
+    <section class="card"><h2>証明の骨組み</h2><div id="proofSkeleton" class="proofBox"></div></section>
+    <section class="card" id="constructionPanel"><h2>作図手順・判定</h2><select id="constructSelect" style="width:100%;border:1px solid #d8e1ed;border-radius:10px;padding:8px;background:#f7f9fc"><option value="perpbin">線分の垂直二等分線</option><option value="bisect">角の二等分線</option><option value="tangent">円周上の点における接線</option><option value="parallel">点を通る平行線</option><option value="perpendicular">点を通る垂線</option></select><div id="stepText" class="stepbox"></div><div id="allowedTools" class="allowed"></div><div class="row" style="margin-top:8px"><button id="prevStep">前へ</button><button id="nextStep">次へ</button><button id="judgeStep">判定</button></div><div id="judgeOut" class="judgeBox hidden"></div><div id="auditTrail" class="audit"><div>構造化された作図ログがここに残ります。</div></div><div class="log" id="opLog"><div>操作ログがここに残ります。</div></div></section>
+    <section class="card"><h2>ルーブリック評価</h2><p class="small">作図ログ判定・観察メモ・根拠カードから自動案を出し、先生が点数を調整できます。</p><div id="rubricAuto" class="scoreBox"></div><div id="rubricInputs" class="rubricGrid"></div><div class="row" style="margin-top:8px"><button id="autoRubric">自動評価案</button><button id="exportRubric">評価JSON</button></div></section>
+    <section class="card"><h2>試行錯誤の記録</h2><p class="small">作図中の迷いや戻り（Undo）を検出し、先生に介入ポイントを提示します。</p>
+    <div id="trialPanel"><div class="trialBox">作図を始めると、ここに試行錯誤の記録が表示されます。</div></div>
+    <div class="row" style="margin-top:8px"><button id="analyzeTrials">試行錯誤分析</button><button id="exportTrials">記録JSON</button></div></section>
+    <section class="card"><h2>作図履歴再生</h2>
+<div class="replayBar"><button id="replayFirst">最初</button><button id="replayPrev">前</button><button id="replayPlay">再生</button><button id="replayPause" style="display:none">一時停止</button><button id="replayNext">次</button></div>
+<div style="margin-top:6px"><label style="font-size:11px;color:#52657d">再生速度: <input type="range" id="replaySpeed" min="200" max="2000" step="200" value="850" style="width:120px;vertical-align:middle"> <span id="replaySpeedLabel">850ms</span></label></div>
+<div id="replayProgress" style="margin-top:6px;height:4px;background:#e2e8f0;border-radius:2px;overflow:hidden"><div id="replayProgressBar" style="width:0%;height:100%;background:#2468aa;transition:width .2s"></div></div>
+<div id="replayState" class="replayState">作図操作を行うと、ここから履歴を再生できます。</div>
+<div id="replayCommentBox" style="margin-top:6px;display:none"><input type="text" id="replayCommentInput" placeholder="このステップへのコメント…" style="width:100%;border:1px solid #d8e1ed;border-radius:8px;padding:6px;font-size:12px"><button id="addReplayComment" style="margin-top:4px">コメント追加</button></div>
+<div id="replayComments" style="margin-top:6px;font-size:11px;color:#475569"></div>
+</section>
+    <section class="card"><h2>学習履歴</h2><p class="small">このブラウザ内に授業ごとの履歴を自動保存します。過去の図と証明の変化を確認できます。</p>
+    <div id="historyPanel" class="historyThumb"><div style="grid-column:1/-1;text-align:center;color:#94a3b8;font-size:12px">まだ履歴がありません</div></div>
+    <div class="row" style="margin-top:8px"><button id="saveHistory">今の状態を保存</button><button id="clearHistory">履歴クリア</button><button id="exportHistory">履歴JSON</button></div></section>
+    <section class="card" id="teacherPanel"><h2>先生用・課題作成</h2><div class="teacherGrid"><input id="teacherTitle" placeholder="課題名（例：同じ弧を見る角）"><textarea id="teacherPrompt" placeholder="問い：生徒に表示する課題文"></textarea><textarea id="teacherHints" placeholder="ヒント（1行に1つ）"></textarea><input id="teacherEvidence" placeholder="根拠カード（、区切り）"><textarea id="teacherProof" placeholder="証明の骨組み"></textarea></div><div class="row" style="margin-top:8px"><button id="applyTeacherTask">課題を適用</button><button id="saveTeacherTask">先生課題JSON</button></div><p class="small">現在の図・問い・ヒント・根拠カードを一体で保存・共有できます。</p></section>
+    <section class="card"><h2>提出データ</h2><p class="small">作図データ、操作ログ、観察メモ、選択した根拠カード、チェック状況、測定値をまとめます。</p><div class="row"><button id="downloadSubmit">提出JSON</button><button id="summarySubmit">提出まとめ</button></div></section>
+    <section class="card"><h2>印刷ワークシート</h2><p class="small">現在の課題を紙のワークシートとして出力します。穴埋め版と白紙版を選べます。</p>
+    <div class="row"><label><input type="radio" name="wsMode" value="fill" checked> 穴埋め版</label><label><input type="radio" name="wsMode" value="blank"> 白紙版</label></div>
+    <div id="worksheetPreview" class="worksheetPreview" style="margin-top:8px">
+      <div class="worksheetSection"><div class="worksheetTitle">課題</div><div id="wsTask">ここに課題が表示されます</div></div>
+      <div class="worksheetSection"><div class="worksheetTitle">図</div><div id="wsFigure">［図のスペース］</div></div>
+      <div class="worksheetGrid"><div class="worksheetSection"><div class="worksheetTitle">観察メモ</div><div id="wsMemo">［メモ欄］</div></div><div class="worksheetSection"><div class="worksheetTitle">根拠カード</div><div id="wsEvidence">［根拠欄］</div></div></div>
+      <div class="worksheetSection"><div class="worksheetTitle">証明</div><div id="wsProof">［証明欄］</div></div>
+    </div>
+    <div class="row" style="margin-top:8px"><button id="refreshWorksheet">プレビュー更新</button><button id="printWorksheet">印刷</button></div></section>
+    <section class="card"><h2>先生ビュー・提出一覧</h2><p class="small">複数の生徒提出JSONを選ぶと、観察メモ・根拠カード・操作ログ・評価案を一覧化します。</p><div class="row"><label class="filelabel">提出JSON複数読込<input id="submissionFiles" type="file" accept="application/json,.json" multiple /></label><button id="clearSubmissions">一覧クリア</button></div><div id="submissionTable" class="submitTable" style="margin-top:8px"><table><tbody><tr><td>提出データはまだ読み込まれていません。</td></tr></tbody></table></div></section>
+    <section class="card"><h2>外部連携</h2><p class="small">LaTeX/TikZ出力、LMS提出形式、GeoGebra参照など、外部ツールとの連携です。</p>
+    <div class="row"><button id="exportTikZ">TikZ出力</button><button id="exportLMS">LMS提出形式</button><button id="refGeoGebra">GeoGebra参照</button></div>
+    <div id="externalOutput" class="exportCodeBox" style="margin-top:8px">// 出力コードがここに表示されます</div></section>
+    <section class="card" id="curriculumPanel"><h2>単元マップ</h2><div class="tabs"><button class="tab active" data-map="all">全体</button><button class="tab" data-map="elementary">小</button><button class="tab" data-map="middle">中</button><button class="tab" data-map="high">高</button></div><div class="currMap" id="currMap"></div></section>
+    <section class="card"><h2>単元の縦接続</h2><p class="small">現在の単元の前提となる単元と、次に進むべき応用単元を示します。</p>
+    <div id="prereqPanel" class="prereqBox"><b>前提単元</b><br><span id="prereqTags">読み込み中…</span></div>
+    <div id="nextUnitPanel" class="nextUnitBox"><b>応用・次の単元</b><br><span id="nextUnitTags">読み込み中…</span></div>
+    <div class="row" style="margin-top:8px"><button id="jumpPrereq">前提単元へ</button><button id="jumpNext">次の単元へ</button></div></section>
+    <section class="card"><h2>そくてい</h2><div id="readVal"><span class="muted">長さ・角度ツールで点を選んでください。</span></div></section>
+    <section class="card"><h2>アクセシビリティ</h2><p class="small">色覚多様性モード、キーボード操作、音声読み上げなどの支援機能です。</p>
+    <div class="row"><label><input type="checkbox" id="colorblindMode"> 色覚多様性モード（形で区別）</label></div>
+    <div class="row" style="margin-top:6px"><label><input type="checkbox" id="keyboardMode"> キーボード操作優先（Tab/Enter/矢印）</label></div>
+    <div class="row" style="margin-top:6px"><button id="speakFigure">図を音声で読む</button></div>
+    <div id="accessStatus" style="margin-top:6px;font-size:11px;color:#475569"></div></section>
+  </aside>
+</div>
+<script>
+"use strict";
+const SVG="http://www.w3.org/2000/svg";
+const board=document.getElementById('board'),hintEl=document.getElementById('hint'),toastEl=document.getElementById('toast'),readVal=document.getElementById('readVal');
+const gradeSelect=document.getElementById('gradeSelect'),unitSelect=document.getElementById('unitSelect'),activitySelect=document.getElementById('activitySelect'),toolButtons=document.getElementById('toolButtons');
+const lineKinds=['line','segment','ray','perpline','bisline','parallel','perpendicular','tangent'];const isLineKind=k=>lineKinds.includes(k);
+let objs=[],measures=[],idc=0,namec=0,history=[],pending=[],current='select',hintLevel=0,stepIndex=0,opLog=[],actionLog=[],actionFrames=[],replayIndex=-1,replayTimer=null,teacherTask=null,lastAction=null,externalTemplates={},externalScenarios={},loadedSubmissions=[];
+const P=id=>objs.find(o=>o.id===id);const nid=()=> 'o'+(idc++);
+function nextName(){let n=namec++,s='';do{s=String.fromCharCode(65+n%26)+s;n=Math.floor(n/26)-1}while(n>=0);return s}
+function addObj(o){o.id=nid();objs.push(o);return o}function addFreePoint(x,y){return addObj({kind:'point',sub:'free',x,y,name:nextName()})}
+function toast(s,type='ok'){toastEl.textContent=s;toastEl.className='toast show '+(type==='bad'?'bad':type==='warn'?'warn':'');setTimeout(()=>toastEl.classList.remove('show'),1900)}function setHint(s){hintEl.textContent=s;hintEl.style.display=s?'block':'none'}
+function log(s){opLog.unshift(new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+'　'+s);opLog=opLog.slice(0,60);renderLog()}function renderLog(){document.getElementById('opLog').innerHTML=opLog.length?opLog.map(x=>'<div>'+x+'</div>').join(''):'<div>操作ログがここに残ります。</div>'}
+function objLabel(id){const o=P(id);if(!o)return id;if(o.kind==='point')return o.name;if(o.kind==='circle'){const c=P(o.center),q=P(o.through);return '円('+(c?c.name:'?')+'中心,'+(q?q.name:'?')+'通過)'}return TOOL_LABEL[o.kind]||o.kind}
+function pointName(id){const o=P(id);return o&&o.kind==='point'?o.name:id}
+function recordAction(kind,detail={}){const entry={time:new Date().toISOString(),kind,step:activitySelect.value==='construction'?{construction:document.getElementById('constructSelect').value,index:stepIndex+1}:null,detail};const frame={objs:JSON.parse(JSON.stringify(objs)),measures:JSON.parse(JSON.stringify(measures)),idc,namec};actionLog.unshift(entry);actionLog=actionLog.slice(0,160);actionFrames.push({entry,frame});if(actionFrames.length>160)actionFrames.shift();replayIndex=actionFrames.length-1;renderAuditTrail();refreshReplayState&&refreshReplayState()}
+function renderAuditTrail(){const box=document.getElementById('auditTrail');if(!box)return;box.innerHTML=actionLog.length?actionLog.slice(0,20).map(e=>'<div><b>'+actionLabel(e.kind)+'</b> '+actionDetailText(e)+'</div>').join(''):'<div>構造化された作図ログがここに残ります。</div>'}
+function actionLabel(k){return {point:'点',segment:'線分',line:'直線',ray:'半直線',circle:'円',parallel:'平行線',perpendicular:'垂線',tangent:'接線',perpbin:'垂直二等分線',bisect:'角二等分線',measureLen:'長さ',measureAng:'角度',drag:'移動',erase:'削除'}[k]||k}
+function actionDetailText(e){const d=e.detail||{};if(e.kind==='circle')return '中心 '+pointName(d.center)+'、通過点 '+pointName(d.through)+'、半径 '+(d.radiusGrid||'?')+'目盛';if(['segment','line','ray','perpbin','bisect','measureLen','measureAng'].includes(e.kind))return (d.points||[]).map(pointName).join('→');if(e.kind==='parallel'||e.kind==='perpendicular')return '基準 '+objLabel(d.ref)+'、通る点 '+pointName(d.point);if(e.kind==='tangent')return objLabel(d.circle)+'、接点 '+pointName(d.point);if(e.kind==='drag')return pointName(d.point)+' を移動';if(e.kind==='point')return pointName(d.point)+'（'+(d.sub||'')+'）';return d.text||''}
+const CURRICULUM_MAP=[
+ {g:'小',unit:'三角形・四角形',tools:'点,線分,長さ,角度',fig:'三角形,四角形,平行四辺形,台形,ひし形',th:'辺・頂点・角,垂直・平行',con:'辺を結ぶ,高さを引く',proof:'観察・分類',task:'形を変えても残る特徴を探す'},
+ {g:'小',unit:'垂直・平行',tools:'直線,平行線,垂線,角度',fig:'直線,四角形',th:'垂直,平行',con:'点を通る垂線・平行線',proof:'理由の説明',task:'同じ幅の道を作る'},
+ {g:'小',unit:'円と正多角形',tools:'円,線分,角度',fig:'円,半径,直径,正多角形',th:'半径は等しい,中心角',con:'円周上の点,正多角形',proof:'観察・説明',task:'円から正六角形を作る'},
+ {g:'小',unit:'対称',tools:'直線,垂線,長さ',fig:'線対称,点対称',th:'対応点,対称軸',con:'対応点を結ぶ,垂直二等分',proof:'対応の説明',task:'対称な点を作る'},
+ {g:'小',unit:'面積',tools:'平行線,垂線,長さ',fig:'長方形,三角形,平行四辺形',th:'底辺と高さ',con:'高さ,分割・移動',proof:'等積変形の説明',task:'高さ一定で面積を比べる'},
+ {g:'小',unit:'拡大図・縮図',tools:'線分,半直線,長さ,角度',fig:'対応する辺・角',th:'対応角,辺の比',con:'拡大図・縮図',proof:'対応の説明',task:'同じ形の条件を探す'},
+ {g:'中',unit:'基本作図',tools:'点,直線,円,交点',fig:'線分,角,円',th:'垂直二等分線,角二等分線',con:'垂直二等分線,角二等分線,垂線',proof:'作図の正当化',task:'コンパスと定規で作図する'},
+ {g:'中',unit:'図形の移動',tools:'点,線分,円',fig:'合同な図形',th:'移動で長さ・角は保たれる',con:'平行移動,対称移動,回転移動',proof:'対応関係',task:'移動前後の不変量を探す'},
+ {g:'中',unit:'平行線と角',tools:'直線,平行線,角度',fig:'平行線,横切る直線',th:'対頂角,同位角,錯角',con:'平行線,補助線',proof:'角の等しさ',task:'等しい角をすべて探す'},
+ {g:'中',unit:'多角形の角',tools:'線分,角度',fig:'三角形,多角形',th:'内角の和,外角の和',con:'対角線で分割',proof:'三角形分割',task:'n角形の内角の和を予想'},
+ {g:'中',unit:'合同',tools:'線分,円,長さ,角度',fig:'三角形',th:'合同条件,対応する辺・角',con:'補助線',proof:'合同証明',task:'合同条件を選ぶ'},
+ {g:'中',unit:'相似',tools:'線分,半直線,平行線,長さ,角度',fig:'三角形,拡大縮小',th:'相似条件,相似比',con:'平行線,補助線',proof:'相似証明',task:'対応する辺の比を調べる'},
+ {g:'中',unit:'円周角',tools:'円,円周上の点,角度,接線',fig:'円,弦,弧,接線',th:'円周角定理,接弦定理の入口',con:'中心,弦,接線',proof:'中心角・二等辺三角形',task:'円周上の点を動かす'},
+ {g:'中',unit:'三平方の定理',tools:'垂線,線分,長さ',fig:'直角三角形,正方形',th:'a²+b²=c²',con:'直角三角形,正方形',proof:'面積・相似',task:'3辺の関係を測る'},
+ {g:'高',unit:'三角比',tools:'線分,垂線,角度,長さ',fig:'直角三角形,単位円',th:'sin,cos,tan',con:'高さ,単位円',proof:'比の不変性',task:'角と辺の比を調べる'},
+ {g:'高',unit:'図形と方程式',tools:'直線,円,交点,接線',fig:'直線,円',th:'円と直線の位置関係',con:'接線,垂線',proof:'距離・判別式の入口',task:'交点の個数を分類'},
+ {g:'高',unit:'円と直線',tools:'円,接線,垂線,角度',fig:'接線,弦,中心',th:'半径と接線は垂',con:'接線,弦の中点',proof:'垂直・距離',task:'接点を動かす'},
+ {g:'高',unit:'ベクトル',tools:'平行線,線分,長さ',fig:'平行四辺形,対角線',th:'和・差,内分',con:'平行四辺形',proof:'対応・成分',task:'合成を図で見る'},
+ {g:'高',unit:'軌跡',tools:'円,直線,拘束点',fig:'円,直線,放物線の入口',th:'条件を満たす点の集合',con:'条件保持点',proof:'必要十分',task:'動く点の跡を予想'},
+ {g:'高',unit:'空間図形',tools:'線分,平行線,垂線,角度',fig:'見取り図,投影図,断面',th:'平行・垂直・角',con:'投影,断面',proof:'平面への帰着',task:'見取り図の関係を読む'}
+];
+const UNIT_DATA={
+ elementary:[
+  ['e_tri','三角形・四角形','辺・頂点・角を動かし、形を構成要素で見る。',['select','point','segment','circle','perpendicular','mlen','mang','erase'],'basic'],
+  ['e_parallel','垂直・平行','平行・垂直を図として保持し、性質を確かめる。',['select','point','segment','line','parallel','perpendicular','mlen','mang','erase'],'parallel'],
+  ['e_circle','円と正多角形','円・半径・中心角から正多角形へつなげる。',['select','point','segment','circle','mlen','mang','erase'],'circlepoly'],
+  ['e_symmetry','対称','線対称・点対称を折り返しや対応で見る。',['select','point','segment','line','perpendicular','mlen','mang','erase'],'symmetry'],
+  ['e_area','面積','底辺・高さ・分割から面積を考える。',['select','point','segment','parallel','perpendicular','mlen','mang','erase'],'area'],
+  ['e_scale','拡大図・縮図','対応する辺と角を比較する。',['select','point','segment','ray','mlen','mang','erase'],'similar']
+ ],
+ middle:[
+  ['m_construct','基本作図','コンパスと定規で、作図の意味を確認する。',['select','point','segment','line','ray','circle','mlen','mang','erase'],'construct'],
+  ['m_transform','図形の移動','平行移動・対称移動・回転移動を対応で見る。',['select','point','segment','line','circle','mlen','mang','erase'],'basic'],
+  ['m_parallel','平行線と角','同位角・錯角・対頂角を動かして発見する。',['select','point','segment','line','parallel','perpendicular','mlen','mang','erase'],'parallel'],
+  ['m_polygon','多角形の角','外角・内角の和を分割で考える。',['select','point','segment','line','mlen','mang','erase'],'polygon'],
+  ['m_congruence','合同','合同条件と対応する辺・角を確認する。',['select','point','segment','circle','mlen','mang','erase'],'congruence'],
+  ['m_similarity','相似','対応する角と辺の比を動かして確認する。',['select','point','segment','ray','parallel','mlen','mang','erase'],'similar'],
+  ['m_circle','円周角','同じ弧に対する円周角の不変性を発見する。',['select','point','segment','line','circle','tangent','mlen','mang','erase'],'circle'],
+  ['m_pythagoras','三平方の定理','直角三角形の3辺の関係を確認する。',['select','point','segment','perpendicular','mlen','mang','erase'],'pythagoras']
+ ],
+ high:[
+  ['h_trig','三角比','角と辺の比を動的に確認する。',['select','point','segment','circle','perpendicular','mlen','mang','erase'],'trig'],
+  ['h_coordinate','図形と方程式','直線・円を座標的に見る準備をする。',['select','point','segment','line','circle','parallel','perpendicular','tangent','mlen','mang','erase'],'coordinate'],
+  ['h_circleline','円と直線','接線・弦・中心から性質を確認する。',['select','point','segment','line','circle','tangent','perpendicular','mlen','mang','erase'],'circle'],
+  ['h_vector','ベクトル','平行四辺形と対角線からベクトルの和を見る。',['select','point','segment','parallel','mlen','mang','erase'],'vector'],
+  ['h_locus','軌跡','条件を保って動く点の集まりを見る。',['select','point','segment','line','circle','perpendicular','parallel','mlen','mang','erase'],'locus'],
+  ['h_space','空間図形','投影図・断面図に接続する平面図形を扱う。',['select','point','segment','line','parallel','perpendicular','mlen','mang','erase'],'basic']
+ ], all:[]
+};UNIT_DATA.all=[...UNIT_DATA.elementary,...UNIT_DATA.middle,...UNIT_DATA.high];
+const TASK_TEMPLATES={
+ circle:[
+  {id:'circle_same_arc',title:'同じ弧を見る円周角',prompt:'点P,Qを円周上で動かし、同じ弦ABを見込む角∠APBと∠AQBを比べましょう。変わらない条件は何ですか。',hints:['P,Qを同じ側の円周上で動かします。','同じ弦ABを見込む角だけを比べます。','中心角∠AOBとの関係を考えます。'],checks:['PまたはQを動かした','∠APBと∠AQBを比べた','同じ弧という条件を書いた'],proof:'同じ弧 AB に対する円周角を比べる。中心角が同じで、円周角は中心角の <span class="blank">半分</span> だから、円周角は <span class="blank">等しい</span>。',scene:'circle'},
+  {id:'circle_center_angle',title:'中心角と円周角',prompt:'中心Oを結び、中心角∠AOBと円周角∠APBを比べましょう。何倍の関係になっていますか。',hints:['OA,OP,OBは半径です。','二等辺三角形が2つ見えます。','中心角は対応する円周角の2倍です。'],checks:['中心Oを確認した','中心角と円周角を測った','2倍/半分の関係を書いた'],proof:'OA=OP=OB なので二等辺三角形ができる。外角の性質より、中心角は円周角の <span class="blank">2倍</span>。',scene:'circle'},
+  {id:'circle_tangent',title:'接線と半径',prompt:'円周上の点Pにおける接線を作り、半径OPとの角度を測りましょう。Pを動かしても何が保たれますか。',hints:['接点Pと中心Oを結びます。','接線は接点で半径に垂直です。','Pを動かしても90°が保たれます。'],checks:['接線を作った','半径OPを結んだ','90°を確認した'],proof:'円の接線は接点を通る半径に <span class="blank">垂直</span> である。したがって∠OPTは <span class="blank">90°</span>。',scene:'tangent'}
+ ],
+ parallel:[
+  {id:'parallel_corresponding',title:'同位角を探す',prompt:'平行な2直線を1本の直線が横切るとき、同位角がどうなるか調べましょう。',hints:['同じ位置にある角を探します。','横切る直線を動かしても比べる位置は同じです。','平行なら同位角は等しくなります。'],checks:['平行線を確認した','同位角を見つけた','角を測った'],proof:'平行線に1本の直線が交わると、対応する位置にある <span class="blank">同位角</span> は等しい。',scene:'parallel'},
+  {id:'parallel_alternate',title:'錯角を探す',prompt:'平行線と横切る直線で、内側にある錯角を探し、等しいか測りましょう。',hints:['2本の平行線の内側に注目します。','Z字型に見える角を探します。','平行線では錯角が等しくなります。'],checks:['内側の角を見つけた','錯角を測った','等しい理由を選んだ'],proof:'平行線に1本の直線が交わると、内側で互い違いにある <span class="blank">錯角</span> は等しい。',scene:'parallel'},
+  {id:'parallel_reverse',title:'角から平行を判断する',prompt:'同位角または錯角が等しいことから、2直線が平行だといえる条件を考えましょう。',hints:['平行なら等しい、の逆を考えます。','どの角が等しければ平行と判断できるでしょうか。','同位角または錯角が等しければ平行です。'],checks:['等しい角を決めた','同位角/錯角を区別した','平行の根拠を書いた'],proof:'2直線に1本の直線が交わり、同位角または錯角が <span class="blank">等しい</span> なら、2直線は <span class="blank">平行</span>。',scene:'parallel'}
+ ],
+ congruence:[
+  {id:'congruence_sas',title:'二辺とその間の角',prompt:'2つの三角形で、二辺とその間の角が等しいと形が決まることを確認しましょう。',hints:['対応する2辺を決めます。','その2辺にはさまれた角を比べます。','合同条件SASにつながります。'],checks:['対応する2辺を決めた','はさまれた角を測った','合同条件を選んだ'],proof:'二辺とその間の角がそれぞれ等しいので、2つの三角形は <span class="blank">合同</span>。',scene:'congruence'},
+  {id:'congruence_asa',title:'一辺とその両端の角',prompt:'一辺とその両端の角が等しいとき、2つの三角形が合同になることを確認しましょう。',hints:['対応する一辺を決めます。','その両端の角を測ります。','ASAの合同条件です。'],checks:['対応する一辺を決めた','両端の角を測った','合同条件を言えた'],proof:'一辺とその両端の角がそれぞれ等しいので、2つの三角形は <span class="blank">合同</span>。',scene:'congruence'},
+  {id:'congruence_sss',title:'三辺が等しい三角形',prompt:'3つの辺の長さがそれぞれ等しいと、三角形の形が決まることを確かめましょう。',hints:['3辺を測ります。','角は測らなくても形は決まります。','SSSの合同条件です。'],checks:['3辺を測った','対応する辺を決めた','SSSを選んだ'],proof:'三辺がそれぞれ等しいので、2つの三角形は <span class="blank">合同</span>。',scene:'congruence'}
+ ],
+ similar:[
+  {id:'similar_aa',title:'2組の角が等しい',prompt:'2つの三角形で2組の角が等しいと、対応する辺の比がどうなるか調べましょう。',hints:['対応する角を2組探します。','頂点を動かしても角が保たれる場合を見ます。','AAの相似条件です。'],checks:['対応する角を2組決めた','辺の比を比べた','相似条件を選んだ'],proof:'2組の角がそれぞれ等しいので、2つの三角形は <span class="blank">相似</span>。',scene:'similar'},
+  {id:'similar_parallel',title:'平行線でできる相似',prompt:'三角形の一辺に平行な線を引いたとき、小さい三角形と大きい三角形の関係を調べましょう。',hints:['平行線によって同位角が等しくなります。','共通の角もあります。','2組の角が等しいので相似です。'],checks:['平行線を確認した','同位角を見つけた','相似を説明した'],proof:'平行線により同位角が等しく、共通の角もある。したがって2つの三角形は <span class="blank">相似</span>。',scene:'similar_parallel'},
+  {id:'similar_ratio',title:'相似比と辺の比',prompt:'相似な三角形で、対応する辺の比がすべて等しくなるか調べましょう。',hints:['対応する辺を正しくそろえます。','長さを測り、比を比べます。','相似比が一定になります。'],checks:['対応する辺を決めた','辺の比を計算した','相似比を説明した'],proof:'相似な図形では、対応する辺の比はすべて <span class="blank">等しい</span>。',scene:'similar'}
+ ],
+ pythagoras:[
+  {id:'pythagoras_measure',title:'3辺の長さから発見',prompt:'直角三角形の3辺を測り、短い2辺の平方の和と斜辺の平方を比べましょう。',hints:['直角をはさむ2辺をa,bとします。','斜辺をcとします。','a²+b²とc²を比べます。'],checks:['直角を確認した','3辺を測った','a²+b²とc²を比べた'],proof:'直角三角形では、直角をはさむ2辺をa,b、斜辺をcとすると <span class="blank">a²+b²=c²</span>。',scene:'pythagoras'},
+  {id:'pythagoras_converse',title:'三平方の定理の逆',prompt:'3辺の長さが a²+b²=c² を満たすとき、その三角形が直角三角形になるか考えましょう。',hints:['一番長い辺をcにします。','a²+b²とc²を比べます。','等しければ直角三角形と判断できます。'],checks:['一番長い辺を決めた','平方の関係を比べた','直角を判断した'],proof:'三角形の3辺が a²+b²=c² を満たすなら、その三角形は <span class="blank">直角三角形</span>。',scene:'pythagoras'},
+  {id:'pythagoras_area',title:'正方形の面積で見る',prompt:'直角三角形の各辺上に正方形を考え、面積の関係を説明しましょう。',hints:['各辺の上に正方形を作ると面積は辺の2乗です。','小さい2つの正方形の面積を足します。','斜辺上の正方形の面積と比べます。'],checks:['辺上の正方形を考えた','面積を辺の2乗で表した','面積の和を説明した'],proof:'辺a,b,c上の正方形の面積はa²,b²,c²。直角三角形では <span class="blank">a²+b²=c²</span>。',scene:'pythagoras'}
+ ],
+
+ circlepoly:[
+  {id:'circlepoly_radius',title:'半径が等しいことを確かめる',prompt:'円周上の点を動かし、中心から円周上の点までの長さがいつも等しいことを確かめましょう。',hints:['中心Oから円周上の複数の点へ線分を引きます。','それぞれの長さを測ります。','どの点も同じ円周上にあることが条件です。'],checks:['円周上の点を動かした','半径を2本以上測った','同じ長さになる理由を書いた'],proof:'同じ円の中心から円周上の点までの距離はすべて <span class="blank">半径</span> なので等しい。',scene:'circlepoly'},
+  {id:'circlepoly_hexagon',title:'円から正六角形を作る',prompt:'半径と同じ長さを円周上に順に取ると、正六角形ができる理由を考えましょう。',hints:['円の半径をコンパスの幅として使います。','円周上で同じ長さを順に取ります。','中心角が60°ずつになることに注目します。'],checks:['円を作った','同じ半径で点を取った','正六角形になる理由を書いた'],proof:'半径と同じ長さの弦を順に取ると、中心角が <span class="blank">60°</span> ずつになる。',scene:'circlepoly'}
+ ],
+ symmetry:[
+  {id:'symmetry_axis',title:'線対称の対応点',prompt:'対応する2点を結んだ線分と対称の軸の関係を調べましょう。',hints:['対応点を結びます。','対称の軸との交わり方を見ます。','軸は対応点を結ぶ線分の垂直二等分線になります。'],checks:['対応点を結んだ','軸との垂直を確認した','二等分を確認した'],proof:'線対称では、対称の軸は対応する2点を結ぶ線分の <span class="blank">垂直二等分線</span> になる。',scene:'symmetry'},
+  {id:'symmetry_point',title:'点対称の中心',prompt:'対応する点を結ぶ線分が、対称の中心で二等分されることを確かめましょう。',hints:['対応点を結びます。','中点に注目します。','すべての対応点の中点が同じ点になります。'],checks:['対応点を結んだ','中点を見つけた','中心で二等分されると説明した'],proof:'点対称では、対称の中心は対応する2点を結ぶ線分の <span class="blank">中点</span> になる。',scene:'symmetry'}
+ ],
+ area:[
+  {id:'area_same_height',title:'高さが同じ三角形の面積',prompt:'底辺と高さが同じ三角形を作り、頂点を動かしても面積が変わらない条件を考えましょう。',hints:['同じ底辺を使います。','頂点を底辺に平行な線上で動かします。','高さが同じなら面積は同じです。'],checks:['底辺を決めた','高さを確認した','面積が同じ条件を書いた'],proof:'三角形の面積は 底辺×高さ÷2。底辺と高さが同じなら、面積は <span class="blank">等しい</span>。',scene:'area'},
+  {id:'area_parallelogram',title:'平行四辺形の高さ',prompt:'平行四辺形を動かし、底辺と高さが同じなら面積が変わらないことを確かめましょう。',hints:['底辺を固定します。','上の辺を平行に保って動かします。','高さが同じか確認します。'],checks:['平行な辺を確認した','高さを測った','面積の式で説明した'],proof:'平行四辺形の面積は 底辺×高さ。底辺と高さが同じなら面積は <span class="blank">等しい</span>。',scene:'area'}
+ ],
+ trig:[
+  {id:'trig_ratio',title:'角が同じ直角三角形の辺の比',prompt:'角を保ったまま大きさを変え、直角三角形の辺の比が変わらないことを調べましょう。',hints:['同じ角をもつ直角三角形を比べます。','対応する辺の比を測ります。','三角比は角だけで決まります。'],checks:['角を固定して比べた','辺の比を計算した','比が一定と説明した'],proof:'同じ鋭角をもつ直角三角形は相似なので、対応する辺の比は <span class="blank">一定</span>。',scene:'trig'},
+  {id:'trig_unit_circle',title:'単位円でsinとcosを見る',prompt:'半径1の円周上の点を動かし、x座標・y座標と三角比の関係を考えましょう。',hints:['半径を1と考えます。','点から軸へ垂線を下ろします。','x座標がcos、y座標がsinに対応します。'],checks:['円周上の点を動かした','垂線を考えた','sin/cosとの対応を書いた'],proof:'単位円では、角θに対応する点の座標は <span class="blank">(cosθ, sinθ)</span> と表せる。',scene:'trig'}
+ ],
+ vector:[
+  {id:'vector_parallelogram',title:'平行四辺形でベクトルの和',prompt:'2つの移動を辺として平行四辺形を作り、対角線が和を表すことを確認しましょう。',hints:['同じ向き・同じ長さの辺を作ります。','平行四辺形の対角線を見ます。','対角線が2つの移動の合成です。'],checks:['平行四辺形を作った','対応する辺を確認した','対角線を和として説明した'],proof:'平行四辺形では、隣り合う2辺で表される移動の和は <span class="blank">対角線</span> で表される。',scene:'vector'},
+  {id:'vector_parallel',title:'平行なベクトル',prompt:'平行な2本の線分を動かし、向きと長さの関係を観察しましょう。',hints:['平行かどうかを確認します。','同じ向きか逆向きかを見ます。','長さの比が倍率になります。'],checks:['平行を確認した','向きを比べた','長さの比を考えた'],proof:'平行なベクトルは、一方が他方の <span class="blank">実数倍</span> として表せる。',scene:'vector'}
+ ],
+ locus:[
+  {id:'locus_circle',title:'一定距離にある点の軌跡',prompt:'1つの点Oから一定の距離にある点Pを動かすと、Pはどんな図形上を動くでしょうか。',hints:['OPの長さを一定にします。','Pをいろいろな方向へ動かします。','一定距離の点の集まりは円です。'],checks:['距離を一定にした','点を動かした','円になると説明した'],proof:'1点Oから一定の距離rにある点の集合は、Oを中心とする <span class="blank">円</span>。',scene:'locus'},
+  {id:'locus_perpbin',title:'2点から等距離の点の軌跡',prompt:'2点A,Bから等しい距離にある点Pを探すと、Pはどんな線上にありますか。',hints:['PAとPBを比べます。','等しくなる点をいくつか探します。','垂直二等分線に注目します。'],checks:['PAとPBを測った','等しい点を探した','垂直二等分線と結びつけた'],proof:'2点A,Bから等距離にある点の集合は、線分ABの <span class="blank">垂直二等分線</span>。',scene:'locus'}
+ ],
+ coordinate:[
+  {id:'coordinate_line_circle',title:'円と直線の交点の個数',prompt:'円と直線を動かし、交点が0個・1個・2個になる場合を分類しましょう。',hints:['直線を円に近づけたり離したりします。','ちょうど1点で接する場合があります。','交点の個数で位置関係を分類します。'],checks:['交点を確認した','接する場合を見つけた','0/1/2個で分類した'],proof:'円と直線は、位置関係により交点が <span class="blank">0個・1個・2個</span> になる。',scene:'coordinate'},
+  {id:'coordinate_tangent',title:'接線と中心からの距離',prompt:'円の中心から直線までの距離と半径を比べ、接線になる条件を考えましょう。',hints:['中心から直線へ垂線を下ろします。','その距離と半径を比べます。','等しいとき接します。'],checks:['中心から垂線を考えた','半径と距離を比べた','接線条件を書いた'],proof:'円の中心から直線までの距離が半径に <span class="blank">等しい</span> とき、その直線は接線。',scene:'coordinate'}
+ ],
+ default:[{id:'default_observe',title:'変わるもの・変わらないもの',prompt:'図形を動かして、変わるものと変わらないものを分けて観察しましょう。',hints:['動かす点を1つ決めます。','長さと角度を測ります。','変わらない理由を考えます。'],checks:['点を動かした','変わらないものを見つけた','理由を考えた'],proof:'観察で見つけた不変な関係を、根拠カードと結びつけて説明する。',scene:'basic'}]
+};
+const DEFAULT_SCENARIOS={
+ circle:{intro:'円周上の点を動かし、同じ弧を見る角に着目させる。',explore:'P,Qを動かし、角度が変わらない場合を探す。',share:'同じ弧・同じ弦という条件を言語化する。',proof:'中心角との関係や二等辺三角形を根拠カードと結びつける。',practice:'別の弦や接線を使った課題で確認する。'},
+ parallel:{intro:'平行線を横切る直線から、等しい角を予想する。',explore:'同位角・錯角・対頂角を測って比較する。',share:'平行であることが必要な角と不要な角を整理する。',proof:'対頂角と平行線の性質を使って角の等しさを説明する。',practice:'角から平行を判断する逆向きの課題へ進む。'},
+ congruence:{intro:'2つの三角形で、どの情報があれば形が決まるか問う。',explore:'辺・角を動かし、合同条件を試す。',share:'対応する辺・角を決める重要性を確認する。',proof:'合同条件→対応部分という証明の骨組みに入る。',practice:'補助線を含む合同証明に進む。'},
+ similar:{intro:'同じ形で大きさが違う三角形を提示する。',explore:'角と辺の比を測り、相似条件を探す。',share:'対応順と相似比を整理する。',proof:'平行線や2組の角から相似を示す。',practice:'相似比を使って長さを求める。'},
+ pythagoras:{intro:'直角三角形の3辺に何か関係があるか問いかける。',explore:'3辺を測り、平方の和を比較する。',share:'斜辺と直角をはさむ2辺を区別する。',proof:'面積や相似の見方でa²+b²=c²を説明する。',practice:'逆や長さの計算問題へ進む。'},
+ area:{intro:'形が違っても面積が同じ場合を提示する。',explore:'頂点を平行線上で動かし、高さ一定を観察する。',share:'底辺と高さが面積を決めることを確認する。',proof:'面積公式と等積変形で説明する。',practice:'三角形・平行四辺形の面積比較へ進む。'},
+ symmetry:{intro:'折り返したとき重なる点を対応点として見る。',explore:'対応点を結び、軸との関係を測る。',share:'垂直二等分・中点という言葉に整理する。',proof:'対応点と対称軸・中心の性質を説明する。',practice:'対称な点や図形を作図する。'},
+ circlepoly:{intro:'円の半径を使って正多角形を作れるか問う。',explore:'円周上に同じ長さを取り、中心角を観察する。',share:'半径・弦・中心角の関係を整理する。',proof:'60°が6つで360°になることを説明する。',practice:'正三角形・正六角形の作図へ進む。'},
+ trig:{intro:'同じ角の直角三角形を大きさ違いで提示する。',explore:'辺の比を測り、角が同じなら比が一定か調べる。',share:'sin,cos,tanを辺の比として整理する。',proof:'相似を根拠に比の不変性を説明する。',practice:'高さや距離を求める問題へ進む。'},
+ vector:{intro:'2つの移動を合成するとどこへ行くか問う。',explore:'平行四辺形を動かし、対角線を観察する。',share:'同じ向き・同じ長さの辺を対応させる。',proof:'平行四辺形の対角線が和を表すことを説明する。',practice:'中点・平行条件へ進む。'},
+ locus:{intro:'条件を満たす点はどこに集まるか予想する。',explore:'一定距離・等距離などの条件で点を動かす。',share:'点の集まりを円・直線として言語化する。',proof:'必要条件と十分条件の両方を確認する。',practice:'条件を変えた軌跡問題へ進む。'},
+ coordinate:{intro:'円と直線の位置関係を交点の個数で見る。',explore:'直線を動かし、交点0/1/2個を分類する。',share:'接線の条件を中心からの距離で整理する。',proof:'距離と半径の比較で説明する。',practice:'座標や方程式で条件を表す。'},
+ default:{intro:'図形を動かして気づきを出す。',explore:'変わる量と変わらない量を測る。',share:'観察を言葉にする。',proof:'根拠カードを使って説明する。',practice:'似た条件の問題で確認する。'}
+};
+function scenarioForUnit(){return externalScenarios[unitType()]||DEFAULT_SCENARIOS[unitType()]||DEFAULT_SCENARIOS.default}
+function renderScenario(){const s=scenarioForUnit(),task=taskObj();const steps=[['導入',s.intro],['自由探索',s.explore],['発見共有',s.share],['証明',s.proof],['練習問題',s.practice]];document.getElementById('scenarioPanel').innerHTML=steps.map(([k,v],i)=>'<div class="scenarioStep"><b>'+(i+1)+'. '+k+'</b><br>'+v+'<br><span class="small">対応課題：'+task.title+'</span></div>').join('')}
+function currentTaskPack(){return {packName:'作図ノートv6課題パック',createdAt:new Date().toISOString(),templates:{[unitType()]:templatesForUnit()},scenarios:{[unitType()]:scenarioForUnit()}}}
+function applyTaskPack(pack){externalTemplates=pack.templates||{};externalScenarios=pack.scenarios||{};document.getElementById('packInfo').innerHTML='<b>'+(pack.packName||'外部課題パック')+'</b> を読み込みました。<br>単元数：'+Object.keys(externalTemplates).length+'、シナリオ数：'+Object.keys(externalScenarios).length;teacherTask=null;renderTemplateOptions();updatePanels()}
+function loadTaskPackFile(file){const r=new FileReader();r.onload=()=>{try{applyTaskPack(JSON.parse(r.result));toast('課題パックを読み込みました')}catch(e){alert('課題パックを読み込めませんでした: '+e.message)}};r.readAsText(file)}
+function unitObj(){return UNIT_DATA[gradeSelect.value].find(u=>u[0]===unitSelect.value)||UNIT_DATA.middle[6]}function unitTools(){return new Set(unitObj()[3])}function unitType(){return unitObj()[4]}function templatesForUnit(){const ext=externalTemplates[unitType()];return ext&&ext.length?ext:(TASK_TEMPLATES[unitType()]||TASK_TEMPLATES.default)}function taskObj(){return teacherTask||templatesForUnit().find(t=>t.id===document.getElementById('templateSelect').value)||templatesForUnit()[0]}
+const TOOL_LABEL={select:'選択',point:'点/上の点',segment:'線分',line:'直線',ray:'半直線',circle:'円',parallel:'平行線',perpendicular:'垂線',tangent:'接線',perpbin:'垂直二等分線',bisect:'角二等分',mlen:'長さ',mang:'角度',erase:'消しゴム'};
+const TOOLS=[{grp:'基本'},{id:'select',name:'選択',hint:'点をドラッグします。緑の点は円周・直線に沿ってだけ動きます。',icon:'<path d="M5 3l7 17 2-7 7-2z"/>'},{id:'point',name:'点/上の点',hint:'空白なら自由点、線や円の上ならその図形に沿って動く点、交点付近なら交点を作ります。',icon:'<circle cx="12" cy="12" r="3"/><path d="M5 18c4-5 10-5 14 0"/>'},{grp:'定規'},{id:'segment',name:'線分',hint:'2点をクリックして線分を引きます。',icon:'<line x1="4" y1="19" x2="20" y2="5"/>'},{id:'line',name:'直線',hint:'2点を通る直線を引きます。',icon:'<line x1="3" y1="20" x2="21" y2="4"/><circle cx="8" cy="15" r="1.4"/><circle cx="16" cy="9" r="1.4"/>'},{id:'ray',name:'半直線',hint:'始点→通る点の向きの半直線を引きます。',icon:'<line x1="5" y1="18" x2="19" y2="6"/><circle cx="5" cy="18" r="1.8"/>'},{grp:'コンパス'},{id:'circle',name:'円',hint:'中心をクリックし、半径を決める点をクリックします。',icon:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="1.5"/>'},{grp:'関係を保つ線'},{id:'parallel',name:'平行線',hint:'基準線→通る点の順に選びます。',icon:'<line x1="5" y1="8" x2="19" y2="8"/><line x1="5" y1="16" x2="19" y2="16"/>'},{id:'perpendicular',name:'垂線',hint:'基準線→通る点の順に選びます。',icon:'<line x1="12" y1="3" x2="12" y2="21"/><line x1="4" y1="12" x2="20" y2="12"/>'},{id:'tangent',name:'接線',hint:'円→円周上の点の順に選びます。',icon:'<circle cx="10" cy="12" r="7"/><line x1="17" y1="4" x2="17" y2="20"/>'},{grp:'自動作図'},{id:'perpbin',name:'垂直二等分',hint:'2点を選ぶと垂直二等分線を作ります。作図手順では原則使いません。',icon:'<line x1="12" y1="3" x2="12" y2="21"/><line x1="5" y1="12" x2="19" y2="12" stroke-dasharray="3 2"/>'},{id:'bisect',name:'角二等分',hint:'辺上の点→頂点→辺上の点の順に選びます。',icon:'<path d="M4 20 L4 4 L20 12"/><line x1="4" y1="20" x2="18" y2="9" stroke-dasharray="3 2"/>'},{grp:'測定'},{id:'mlen',name:'長さ',hint:'2点を選ぶと長さを測ります。1目盛=1です。',icon:'<line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="8" x2="4" y2="16"/><line x1="20" y1="8" x2="20" y2="16"/>'},{id:'mang',name:'角度',hint:'3点（辺・頂点・辺）を選ぶと角度を測ります。',icon:'<path d="M4 20 L4 4"/><path d="M4 20 L20 20"/><path d="M4 12 A8 8 0 0 0 12 20"/>'},{grp:'編集'},{id:'erase',name:'消しゴム',hint:'図形や点をクリックして消します。',icon:'<path d="M3 16l7-7 8 8-4 4H7z"/><line x1="14" y1="21" x2="21" y2="21"/>'}];
+const CONSTRUCT_STEPS={
+ perpbin:[['線分 AB を引く。',['point','segment'],'ABという線分があるかを見ます。'],['A を中心に、AB の半分より長い円を描く。',['circle'],'中心がAで、半径がABの半分より長い円を見ます。'],['B を中心に、同じ半径の円を描く。',['circle'],'A中心の円とB中心の円の半径が等しいかを見ます。'],['2つの円の交点を2つ取る。',['point'],'2つの円の交点が2つあるかを見ます。'],['その2つの交点を結ぶ。これが AB の垂直二等分線。',['line','segment'],'ABに垂直で中点を通る直線があるかを見ます。']],
+ bisect:[['角をつくる2本の半直線を用意する。',['point','ray','line'],'共通の頂点をもつ2本の辺があるかを見ます。'],['頂点を中心に円を描き、2辺との交点を取る。',['circle','point'],'頂点中心の円と両辺の交点を見ます。'],['その2交点を中心に、同じ半径の円をそれぞれ描く。',['circle'],'2つの円の半径が等しいかを見ます。'],['2つの円の交点と頂点を結ぶ。これが角の二等分線。',['line','segment'],'二等分線らしい線があるかを見ます。']],
+ tangent:[['円と円周上の点 P を用意する。',['circle','point'],'円と円周上の点があるかを見ます。'],['中心 O と P を結ぶ。',['segment','line'],'中心と円周上の点を結んだ半径があるかを見ます。'],['P を通り OP に垂直な直線を作図する。',['perpendicular','line','circle','point'],'Pを通りOPに垂直な直線があるかを見ます。'],['半径と垂直に交わるので、この直線が接線。',['mang','mlen'],'接線と半径の角が90°かを見ます。']],
+ parallel:[['基準線 l と通したい点 P を決める。',['line','point'],'基準線と点があるかを見ます。'],['P を通る、l への垂線を作図する。',['perpendicular','circle','point'],'Pを通る垂線があるかを見ます。'],['さらに P を通って、その垂線に垂直な直線を作図する。',['perpendicular','line'],'基準線と平行な線があるかを見ます。'],['垂直が2回重なるので、できた直線は l と平行。',['mang'],'2本の線の傾きが等しいかを見ます。']],
+ perpendicular:[['基準線 l と通したい点 P を決める。',['line','point'],'基準線と点があるかを見ます。'],['P を中心に円を描き、l との交点を2つ取る。',['circle','point'],'円と基準線の交点が2つあるかを見ます。'],['その2交点の垂直二等分線を作図する。',['circle','line','point','perpbin'],'交点を結ぶ線分の垂直二等分線があるかを見ます。'],['その直線は P を通り、l に垂直。',['mang'],'基準線とできた線が90°かを見ます。']]
+};
+function stepAllowed(){if(activitySelect.value!=='construction'||!document.getElementById('stepLock').checked)return null;const key=document.getElementById('constructSelect').value;const st=CONSTRUCT_STEPS[key][stepIndex]||CONSTRUCT_STEPS[key][0];return new Set(['select','erase','mlen','mang',...st[1]])}
+function renderUnitOptions(){const arr=UNIT_DATA[gradeSelect.value];unitSelect.innerHTML=arr.map(u=>`<option value="${u[0]}">${u[1]}</option>`).join('');if(gradeSelect.value==='middle')unitSelect.value='m_circle';else unitSelect.value=arr[0][0];teacherTask=null;renderTemplateOptions();updatePanels()}function renderTemplateOptions(){const arr=templatesForUnit();const sel=document.getElementById('templateSelect');sel.innerHTML=arr.map(t=>`<option value="${t.id}">${t.title}</option>`).join('');if(arr[0])sel.value=arr[0].id}
+function renderTools(){const uTools=unitTools();const allow=stepAllowed();toolButtons.innerHTML='';let grp=null;TOOLS.forEach(t=>{if(t.grp){grp=t.grp;return}let visible=uTools.has(t.id)||['select','point','erase','mlen','mang'].includes(t.id);if(gradeSelect.value==='all'||activitySelect.value==='teacher')visible=true;if(activitySelect.value==='construction'&&['perpbin','bisect'].includes(t.id)&&document.getElementById('stepLock').checked)visible=false;if(!visible)return;if(grp){const g=document.createElement('div');g.className='grp';g.textContent=grp;toolButtons.appendChild(g);grp=null}const b=document.createElement('button');b.type='button';const ok=!allow||allow.has(t.id);b.className='btn'+(t.id===current?' active':'')+(allow&&ok?' reco':'')+(allow&&!ok?' dim':'');b.dataset.id=t.id;b.innerHTML=`<svg viewBox="0 0 24 24">${t.icon}</svg><span>${t.name}</span>`;b.onclick=()=>selectTool(t.id);toolButtons.appendChild(b)});if(![...toolButtons.querySelectorAll('.btn')].some(b=>b.dataset.id===current))current='select';document.querySelectorAll('.btn').forEach(b=>b.classList.toggle('active',b.dataset.id===current));updateStepText()}
+function selectTool(id){const allow=stepAllowed();if(allow&&!allow.has(id)){toast('今の手順では「'+TOOL_LABEL[id]+'」は使わない想定です','warn');return}current=id;pending=[];const t=TOOLS.find(x=>x.id===id);setHint(t?t.hint:'');renderTools();render()}
+function updatePanels(){const u=unitObj(),task=taskObj();document.getElementById('unitInfo').innerHTML=`<span class="pill">${gradeSelect.options[gradeSelect.selectedIndex].text}</span><span class="pill green">${u[1]}</span>${teacherTask?'<span class="pill violet">先生課題</span>':''}<p>${u[2]}</p><p class="small"><b>表示ツール：</b>${u[3].map(x=>TOOL_LABEL[x]).join('、')}</p>`;document.getElementById('lessonPrompt').textContent=task.prompt;document.getElementById('lessonChecklist').innerHTML=(task.checks||[]).map(x=>`<label><input type="checkbox">${x}</label>`).join('');document.getElementById('lessonPanel').style.display=activitySelect.value==='free'?'none':'block';document.getElementById('constructionPanel').style.display=activitySelect.value==='construction'?'block':'none';document.getElementById('teacherPanel').style.display=activitySelect.value==='teacher'?'block':'none';hintLevel=0;document.getElementById('lessonHint').classList.add('hidden');renderEvidence();renderProof();renderTools();renderScenario();renderCurrMap(currentMapFilter)}
+gradeSelect.onchange=renderUnitOptions;unitSelect.onchange=()=>{teacherTask=null;renderTemplateOptions();updatePanels()};document.getElementById('templateSelect').onchange=()=>{teacherTask=null;updatePanels()};activitySelect.onchange=()=>{updatePanels();setHint(activitySelect.value==='construction'?'作図手順では、手順ごとに使う道具と対象を判定します。':activitySelect.value==='teacher'?'先生用に、現在の図と課題文・ヒント・根拠カードを保存できます。':'単元プリセットに合わせて、課題と道具を表示します。')};document.getElementById('stepLock').onchange=renderTools;
+function evidenceList(){const base=['対頂角','同位角','錯角','二等辺三角形の底角','合同条件','相似条件','円周角定理','三平方の定理','半径と接線は垂直','平行線の性質','垂直二等分線上の点','中心角','外角の性質'];if(teacherTask&&teacherTask.evidence)return teacherTask.evidence;return base}function renderEvidence(){document.getElementById('evidenceCards').innerHTML=evidenceList().map(x=>`<button class="eCard" type="button">${x}</button>`).join('');document.querySelectorAll('.eCard').forEach(b=>b.onclick=()=>{b.classList.toggle('selected');renderProof()})}function selectedEvidence(){return [...document.querySelectorAll('.eCard.selected')].map(b=>b.textContent)}
+function renderProof(){const ev=selectedEvidence();const task=taskObj();let core=task.proof||'観察で見つけた不変な関係を、使える根拠に結びつけて「だから」をつなぐ。';document.getElementById('proofSkeleton').innerHTML=core+(ev.length?`<hr style="border:none;border-top:1px solid #ddd;margin:8px 0"><b>選んだ根拠：</b>${ev.join('、')}`:'')}
+function updateStepText(){const key=document.getElementById('constructSelect').value;const arr=CONSTRUCT_STEPS[key];stepIndex=Math.max(0,Math.min(stepIndex,arr.length-1));document.getElementById('stepText').innerHTML=`<b>${stepIndex+1}/${arr.length}</b>　${arr[stepIndex][0]}<br><span class="small">判定観点：${arr[stepIndex][2]}</span>`;document.getElementById('allowedTools').textContent='この手順で主に使う道具：'+arr[stepIndex][1].map(x=>TOOL_LABEL[x]).join('、')}document.getElementById('constructSelect').onchange=()=>{stepIndex=0;document.getElementById('judgeOut').classList.add('hidden');renderTools()};document.getElementById('prevStep').onclick=()=>{stepIndex--;renderTools()};document.getElementById('nextStep').onclick=()=>{stepIndex++;renderTools()};document.getElementById('judgeStep').onclick=()=>judgeConstruction(true);
+function pointByName(n){return objs.find(o=>o.kind==='point'&&o.name===n)}function lines(){return objs.filter(o=>isLineKind(o.kind))}function circles(){return objs.filter(o=>o.kind==='circle')}function lineAngle(o){const l=linePts(o);if(!l||!l.a||!l.b)return null;return Math.atan2(l.b.y-l.a.y,l.b.x-l.a.x)}function angleDiff(a,b){let d=Math.abs(angleNorm(a-b));return Math.min(d,Math.PI-d)}function hasSegmentBetween(p,q){return objs.some(o=>o.kind==='segment'&&((o.p1===p.id&&o.p2===q.id)||(o.p1===q.id&&o.p2===p.id)))}function approx(x,y,t=0.12){return Math.abs(x-y)<=t}
+function actionsOf(k){return actionLog.filter(e=>e.kind===k)}function sameRadiusCirclePairByLog(){const cs=actionsOf('circle');for(let i=0;i<cs.length;i++)for(let j=i+1;j<cs.length;j++){const a=cs[i].detail,b=cs[j].detail;if(a.center!==b.center&&Math.abs((a.radiusPx||0)-(b.radiusPx||0))<3)return true}return false}
+function hasActionLineThrough(names){return actionLog.some(e=>['segment','line','ray'].includes(e.kind)&&names.every(n=>(e.detail.names||[]).includes(n)))}function hasActionCircleCenter(name){return actionLog.some(e=>e.kind==='circle'&&e.detail.centerName===name)}function hasActionPointSub(sub){return actionLog.some(e=>e.kind==='point'&&e.detail.sub===sub)}
+function judgeConstruction(show=false){const key=document.getElementById('constructSelect').value;let checks=[],ok=false,msg='';recompute();
+ if(key==='perpbin'){checks=[['線分ABを作った',hasActionLineThrough(['A','B'])||!!(pointByName('A')&&pointByName('B'))],['A中心の円を作った',hasActionCircleCenter('A')],['B中心の円を作った',hasActionCircleCenter('B')],['2つの円の半径が等しい',sameRadiusCirclePairByLog()],['円どうしの交点を取った',actionLog.filter(e=>e.kind==='point'&&e.detail.sub==='inter').length>=2],['交点どうしを結んだ/垂直二等分線を作った',actionsOf('perpbin').length>=1||objs.some(o=>o.kind==='perpline')]];ok=checks.filter(c=>c[1]).length>=4;msg=ok?'操作ログから、中心・半径・交点を使う作図の流れを確認しました。':'操作ログ上、中心・半径・交点のどれかが不足しています。'}
+ else if(key==='bisect'){checks=[['角を作る2本の辺を用意した',actionsOf('ray').length>=2||actionsOf('line').length>=2||actionsOf('segment').length>=2],['頂点中心の円を作った',actionsOf('circle').length>=1],['同じ半径の円を2つ作った',sameRadiusCirclePairByLog()],['円の交点を取った',hasActionPointSub('inter')],['頂点と交点を結んだ/角二等分線を作った',actionsOf('bisect').length>=1||objs.some(o=>o.kind==='bisline')]];ok=checks.filter(c=>c[1]).length>=4;msg=ok?'角の二等分線に必要な操作の流れがおおむね確認できました。':'角を作る辺、同じ半径の円、交点、頂点との結線を確認してください。'}
+ else if(key==='tangent'){checks=[['円を作った',actionsOf('circle').length>=1||circles().length>=1],['円周上の点を選んだ',actionLog.some(e=>e.kind==='point'&&e.detail.sub==='on')||objs.some(o=>o.kind==='point'&&o.sub==='on')],['中心と接点を結んだ',actionsOf('segment').length>=1||actionsOf('line').length>=1],['円と接点を指定して接線を作った',actionsOf('tangent').length>=1||objs.some(o=>o.kind==='tangent')]];ok=checks.filter(c=>c[1]).length>=3;msg=ok?'円、接点、半径、接線の対象選択を確認しました。':'円を選び、円周上の点を接点として選ぶ操作が必要です。'}
+ else if(key==='parallel'){checks=[['基準線を作った/選んだ',actionsOf('line').length>=1||lines().length>=1],['通る点を作った/選んだ',actionsOf('point').length>=1||objs.some(o=>o.kind==='point')],['基準線と点を指定して平行線を作った',actionsOf('parallel').length>=1||objs.some(o=>o.kind==='parallel')]];ok=checks.every(c=>c[1]);msg=ok?'基準線と通る点を指定した平行線の作図操作を確認しました。':'基準線を先に選び、そのあと通る点を選んでください。'}
+ else if(key==='perpendicular'){checks=[['基準線を作った/選んだ',actionsOf('line').length>=1||lines().length>=1],['通る点または交点を取った',actionsOf('point').length>=1||objs.some(o=>o.kind==='point')],['垂線または垂直二等分線を作った',actionsOf('perpendicular').length>=1||actionsOf('perpbin').length>=1||objs.some(o=>o.kind==='perpendicular'||o.kind==='perpline')]];ok=checks.every(c=>c[1]);msg=ok?'基準線と対象点をもとに垂直な線を作った操作を確認しました。':'基準線と通る点を選び、垂線を作ってください。'}
+ const out=document.getElementById('judgeOut');out.classList.remove('hidden');out.innerHTML=(ok?'<b>○ ログ判定：</b>':'<b>△ ログ判定：</b>')+msg+'<ul>'+checks.map(c=>'<li>'+(c[1]?'○ ':'△ ')+c[0]+'</li>').join('')+'</ul>';if(show)toast(ok?'作図ログで手順を確認しました':'作図ログ上、まだ条件が足りません',ok?'ok':'warn');return {ok,checks:checks.map(c=>({item:c[0],ok:c[1]})),message:msg}}
+function svgpt(evt){const r=board.getBoundingClientRect();return{x:evt.clientX-r.left,y:evt.clientY-r.top}}function EL(tag,attrs){const e=document.createElementNS(SVG,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);return e}function dist(a,b){return Math.hypot(a.x-b.x,a.y-b.y)}function angleNorm(a){while(a>Math.PI)a-=2*Math.PI;while(a<-Math.PI)a+=2*Math.PI;return a}function pushHistory(){history.push(JSON.stringify({objs,measures,idc,namec,grade:gradeSelect.value,unit:unitSelect.value,activity:activitySelect.value,opLog,actionLog,actionFrames,teacherTask,memo:document.getElementById('memoText').value}));if(history.length>80)history.shift()}function undo(){if(!history.length)return;const s=JSON.parse(history.pop());objs=s.objs;measures=s.measures;idc=s.idc;namec=s.namec;opLog=s.opLog||[];actionLog=s.actionLog||[];actionFrames=s.actionFrames||[];replayIndex=actionFrames.length-1;teacherTask=s.teacherTask||null;document.getElementById('memoText').value=s.memo||'';gradeSelect.value=s.grade||gradeSelect.value;renderUnitOptions();unitSelect.value=s.unit||unitSelect.value;activitySelect.value=s.activity||activitySelect.value;updatePanels();render();updateReadout();renderLog()}
+function linePts(o){if(['line','segment','ray'].includes(o.kind))return{a:P(o.p1),b:P(o.p2),mode:o.kind};if(isLineKind(o.kind))return{a:o.a,b:o.b,mode:'line'};return null}function circleParams(o){const c=P(o.center),q=P(o.through);return{c,R:dist(c,q)}}function projectParam(pos,l,mode){const a=l.a,b=l.b,dx=b.x-a.x,dy=b.y-a.y,L2=dx*dx+dy*dy||1;let t=((pos.x-a.x)*dx+(pos.y-a.y)*dy)/L2;if(mode==='segment')t=Math.max(0,Math.min(1,t));if(mode==='ray')t=Math.max(0,t);return t}function pointOnLineByParam(parent,t){const o=P(parent),l=linePts(o);if(!l||!l.a||!l.b)return null;let tt=t;if(l.mode==='segment')tt=Math.max(0,Math.min(1,tt));if(l.mode==='ray')tt=Math.max(0,tt);return{x:l.a.x+(l.b.x-l.a.x)*tt,y:l.a.y+(l.b.y-l.a.y)*tt}}function recomputePointOn(o){const par=P(o.parent);if(!par)return;if(par.kind==='circle'){const{c,R}=circleParams(par);o.x=c.x+Math.cos(o.param)*R;o.y=c.y+Math.sin(o.param)*R}else if(isLineKind(par.kind)){const p=pointOnLineByParam(o.parent,o.param);if(p){o.x=p.x;o.y=p.y}}}
+function updateDerivedLines(){objs.forEach(o=>{if(o.kind==='perpline'){const A=P(o.pA),B=P(o.pB);if(!A||!B)return;const mx=(A.x+B.x)/2,my=(A.y+B.y)/2,dx=B.x-A.x,dy=B.y-A.y,L=Math.hypot(dx,dy)||1;o.a={x:mx-dy/L*650,y:my+dx/L*650};o.b={x:mx+dy/L*650,y:my-dx/L*650};o.rArc=L*.72}if(o.kind==='bisline'){const A=P(o.pA),V=P(o.pV),C=P(o.pC);if(!A||!V||!C)return;const a1=Math.atan2(A.y-V.y,A.x-V.x),a2=Math.atan2(C.y-V.y,C.x-V.x),d=angleNorm(a2-a1),bis=a1+d/2;o.a={x:V.x,y:V.y};o.b={x:V.x+Math.cos(bis)*700,y:V.y+Math.sin(bis)*700}}if(o.kind==='parallel'||o.kind==='perpendicular'){const ref=P(o.refLine),pt=P(o.point),l=ref&&linePts(ref);if(!l||!pt)return;let dx=l.b.x-l.a.x,dy=l.b.y-l.a.y,L=Math.hypot(dx,dy)||1;dx/=L;dy/=L;if(o.kind==='perpendicular'){const ndx=-dy,ndy=dx;dx=ndx;dy=ndy}o.a={x:pt.x-dx*700,y:pt.y-dy*700};o.b={x:pt.x+dx*700,y:pt.y+dy*700}}if(o.kind==='tangent'){const cobj=P(o.circle),pt=P(o.point);if(!cobj||!pt)return;const{c}=circleParams(cobj);let dx=pt.x-c.x,dy=pt.y-c.y,L=Math.hypot(dx,dy)||1;dx/=L;dy/=L;const tx=-dy,ty=dx;o.a={x:pt.x-tx*700,y:pt.y-ty*700};o.b={x:pt.x+tx*700,y:pt.y+ty*700}}})}
+function interLL(a,b,c,d){if(!a||!b||!c||!d)return null;const x1=a.x,y1=a.y,x2=b.x,y2=b.y,x3=c.x,y3=c.y,x4=d.x,y4=d.y,den=(x1-x2)*(y3-y4)-(y1-y2)*(x3-x4);if(Math.abs(den)<1e-9)return null;const t=((x1-x3)*(y3-y4)-(y1-y3)*(x3-x4))/den;return{x:x1+t*(x2-x1),y:y1+t*(y2-y1)}}function interLC(a,b,c,R){const dx=b.x-a.x,dy=b.y-a.y,fx=a.x-c.x,fy=a.y-c.y,A=dx*dx+dy*dy,B=2*(fx*dx+fy*dy),C=fx*fx+fy*fy-R*R;let D=B*B-4*A*C;if(D<0)return[];D=Math.sqrt(D);const t1=(-B-D)/(2*A),t2=(-B+D)/(2*A),r=[{x:a.x+t1*dx,y:a.y+t1*dy}];if(D>1e-8)r.push({x:a.x+t2*dx,y:a.y+t2*dy});return r}function interCC(c1,r1,c2,r2){const d=Math.hypot(c2.x-c1.x,c2.y-c1.y);if(d<1e-8||d>r1+r2||d<Math.abs(r1-r2))return[];const a=(r1*r1-r2*r2+d*d)/(2*d),h2=r1*r1-a*a;if(h2<0)return[];const h=Math.sqrt(h2),xm=c1.x+a*(c2.x-c1.x)/d,ym=c1.y+a*(c2.y-c1.y)/d,rx=-(c2.y-c1.y)*h/d,ry=(c2.x-c1.x)*h/d;return h<1e-8?[{x:xm,y:ym}]:[{x:xm+rx,y:ym+ry},{x:xm-rx,y:ym-ry}]}
+function computeInter(o){const o1=P(o.par1),o2=P(o.par2);if(!o1||!o2)return null;let cand=[];if(isLineKind(o1.kind)&&isLineKind(o2.kind)){const l1=linePts(o1),l2=linePts(o2),r=interLL(l1.a,l1.b,l2.a,l2.b);if(r)cand=[r]}else if(isLineKind(o1.kind)&&o2.kind==='circle'){const l=linePts(o1),c=circleParams(o2);cand=interLC(l.a,l.b,c.c,c.R)}else if(o1.kind==='circle'&&isLineKind(o2.kind)){const l=linePts(o2),c=circleParams(o1);cand=interLC(l.a,l.b,c.c,c.R)}else if(o1.kind==='circle'&&o2.kind==='circle'){const c1=circleParams(o1),c2=circleParams(o2);cand=interCC(c1.c,c1.R,c2.c,c2.R)}if(!cand.length)return null;if(cand.length===1||!o.whichClose)return cand[0];cand.sort((p,q)=>Math.hypot(p.x-o.whichClose.x,p.y-o.whichClose.y)-Math.hypot(q.x-o.whichClose.x,q.y-o.whichClose.y));return cand[0]}function recompute(){for(let pass=0;pass<4;pass++){updateDerivedLines();objs.forEach(o=>{if(o.kind==='point'&&o.sub==='on')recomputePointOn(o)});updateDerivedLines();objs.forEach(o=>{if(o.kind==='point'&&o.sub==='inter'){const r=computeInter(o);if(r){o.x=r.x;o.y=r.y}}})}}
+function extendLine(a,b,mode){const dx=b.x-a.x,dy=b.y-a.y,L=Math.hypot(dx,dy)||1,ux=dx/L,uy=dy/L,F=2600;if(mode==='segment')return[a,b];if(mode==='ray')return[a,{x:a.x+ux*F,y:a.y+uy*F}];return[{x:a.x-ux*F,y:a.y-uy*F},{x:a.x+ux*F,y:a.y+uy*F}]}function drawLine(o,cls='obj-line'){const l=linePts(o);if(!l||!l.a||!l.b)return;const[e1,e2]=extendLine(l.a,l.b,l.mode);board.appendChild(EL('line',{x1:e1.x,y1:e1.y,x2:e2.x,y2:e2.y,class:cls,'data-id':o.id}))}
+function render(){recompute();board.innerHTML='';objs.forEach(o=>{if(o.kind==='perpline'){const A=P(o.pA),B=P(o.pB);if(A&&B)[A,B].forEach(c=>board.appendChild(EL('circle',{cx:c.x,cy:c.y,r:o.rArc||40,class:'obj-aux'})))}});objs.forEach(o=>{if(isLineKind(o.kind))drawLine(o);if(o.kind==='circle'){const{c,R}=circleParams(o);board.appendChild(EL('circle',{cx:c.x,cy:c.y,r:R,class:'obj-circle','data-id':o.id}))}});drawMeasures();objs.forEach(o=>{if(o.kind==='point'){board.appendChild(EL('circle',{cx:o.x,cy:o.y,r:5,class:'pt '+o.sub,'data-id':o.id}));board.appendChild(EL('circle',{cx:o.x,cy:o.y,r:13,class:'pt-hit','data-id':o.id,'data-pt':'1'}));if(document.getElementById('labelToggle').checked){const t=EL('text',{x:o.x+8,y:o.y-8,class:'lbl'});t.textContent=o.name;board.appendChild(t)}}});pending.forEach(item=>{if(item.type==='point'){const p=P(item.id);if(p)board.appendChild(EL('circle',{cx:p.x,cy:p.y,r:9,class:'selring'}))}if(item.type==='obj'){const o=P(item.id);if(o&&o.kind==='circle'){const{c,R}=circleParams(o);board.appendChild(EL('circle',{cx:c.x,cy:c.y,r:R+5,class:'selring'}))}else if(o)drawLine(o,'obj-construct')}})}
+function drawMeasures(){measures.forEach(m=>{if(m.type==='len'){const a=P(m.p[0]),b=P(m.p[1]);if(!a||!b)return;const d=dist(a,b),mx=(a.x+b.x)/2,my=(a.y+b.y)/2;board.appendChild(EL('line',{x1:a.x,y1:a.y,x2:b.x,y2:b.y,stroke:'#137a59','stroke-width':1.5,'stroke-dasharray':'3 4'}));const t=EL('text',{x:mx,y:my-7,class:'measure','text-anchor':'middle'});t.textContent=(d/24).toFixed(2);board.appendChild(t)}if(m.type==='ang'){const A=P(m.p[0]),V=P(m.p[1]),C=P(m.p[2]);if(!A||!V||!C)return;let a1=Math.atan2(A.y-V.y,A.x-V.x),a2=Math.atan2(C.y-V.y,C.x-V.x),d=angleNorm(a2-a1);const deg=Math.abs(d*180/Math.PI),R=28,start={x:V.x+Math.cos(a1)*R,y:V.y+Math.sin(a1)*R},end={x:V.x+Math.cos(a2)*R,y:V.y+Math.sin(a2)*R};board.appendChild(EL('path',{d:`M ${start.x} ${start.y} A ${R} ${R} 0 0 ${d>0?1:0} ${end.x} ${end.y}`,fill:'none',stroke:'#137a59','stroke-width':1.8}));const mid=a1+d/2,t=EL('text',{x:V.x+Math.cos(mid)*(R+18),y:V.y+Math.sin(mid)*(R+18)+4,class:'measure','text-anchor':'middle'});t.textContent=deg.toFixed(1)+'°';board.appendChild(t)}})}
+function distToSeg(p,a,b){const dx=b.x-a.x,dy=b.y-a.y,L2=dx*dx+dy*dy||1;let t=((p.x-a.x)*dx+(p.y-a.y)*dy)/L2;t=Math.max(0,Math.min(1,t));return Math.hypot(p.x-(a.x+t*dx),p.y-(a.y+t*dy))}function pointAt(pos){let best=null,bd=15;objs.forEach(o=>{if(o.kind==='point'){const d=Math.hypot(o.x-pos.x,o.y-pos.y);if(d<bd){bd=d;best=o}}});return best}function objAt(pos,filter=null){let best=null,bd=10;objs.forEach(o=>{if(filter&&filter!==o.kind&&!(filter==='lineLike'&&isLineKind(o.kind)))return;let d=1e9;if(isLineKind(o.kind)){const l=linePts(o);if(l&&l.a&&l.b){const[e1,e2]=extendLine(l.a,l.b,l.mode);d=distToSeg(pos,e1,e2)}}else if(o.kind==='circle'){const{c,R}=circleParams(o);d=Math.abs(Math.hypot(pos.x-c.x,pos.y-c.y)-R)}if(d<bd){bd=d;best=o}});return best}function objsNear(pos){return objs.filter(o=>{if(isLineKind(o.kind)){const l=linePts(o);if(!l||!l.a||!l.b)return false;const[e1,e2]=extendLine(l.a,l.b,l.mode);return distToSeg(pos,e1,e2)<10}if(o.kind==='circle'){const{c,R}=circleParams(o);return Math.abs(Math.hypot(pos.x-c.x,pos.y-c.y)-R)<10}return false})}
+function addOnPoint(parent,pos){const par=P(parent);if(par.kind==='circle'){const{c}=circleParams(par);return addObj({kind:'point',sub:'on',parent,param:Math.atan2(pos.y-c.y,pos.x-c.x),x:pos.x,y:pos.y,name:nextName()})}const l=linePts(par),t=projectParam(pos,l,l.mode),p=pointOnLineByParam(parent,t)||pos;return addObj({kind:'point',sub:'on',parent,param:t,x:p.x,y:p.y,name:nextName()})}function pointHere(pos){const hit=pointAt(pos);if(hit)return hit;const near=objsNear(pos);if(near.length>=2){const o=addObj({kind:'point',sub:'inter',par1:near[0].id,par2:near[1].id,whichClose:{x:pos.x,y:pos.y},x:pos.x,y:pos.y,name:nextName()});recompute();return o}if(near.length===1)return addOnPoint(near[0].id,pos);return addFreePoint(pos.x,pos.y)}
+let drag=null;board.addEventListener('pointerdown',e=>{const pos=svgpt(e);if(current==='select'){const hit=pointAt(pos);if(hit&&(hit.sub==='free'||hit.sub==='on')){pushHistory();drag=hit;board.setPointerCapture(e.pointerId);board.style.cursor='grabbing'}return}pushHistory();if(current==='erase'){const target=pointAt(pos)||objAt(pos);if(target){recordAction('erase',{target:target.id,text:objLabel(target.id)});eraseObj(target.id);lastAction={tool:'erase'};log('削除しました');render();updateReadout();autoJudge()}return}handleBuild(pos)});board.addEventListener('pointermove',e=>{if(!drag)return;const pos=svgpt(e);if(drag.sub==='free'){drag.x=pos.x;drag.y=pos.y}else if(drag.sub==='on'){const par=P(drag.parent);if(par&&par.kind==='circle'){const{c}=circleParams(par);drag.param=Math.atan2(pos.y-c.y,pos.x-c.x)}else if(par&&isLineKind(par.kind)){const l=linePts(par);drag.param=projectParam(pos,l,l.mode)}recomputePointOn(drag)}render();updateReadout()});board.addEventListener('pointerup',()=>{if(drag){recordAction('drag',{point:drag.id,name:drag.name,sub:drag.sub});lastAction={tool:'select',point:drag.name};log(drag.name+' を動かしました');autoJudge()}drag=null;board.style.cursor='default'});
+function autoJudge(){if(activitySelect.value==='construction')judgeConstruction(false)}function handleBuild(pos){if(['segment','line','ray','circle','perpbin','bisect','mlen','mang'].includes(current)){const p=pointHere(pos);pending.push({type:'point',id:p.id});const need={segment:2,line:2,ray:2,circle:2,perpbin:2,bisect:3,mlen:2,mang:3}[current];if(pending.length<need){render();return}const ids=pending.map(x=>x.id);pending=[];if(current==='segment'){addObj({kind:'segment',p1:ids[0],p2:ids[1]});recordAction('segment',{points:ids,names:ids.map(pointName)});log('線分を作成')}if(current==='line'){addObj({kind:'line',p1:ids[0],p2:ids[1]});recordAction('line',{points:ids,names:ids.map(pointName)});log('直線を作成')}if(current==='ray'){addObj({kind:'ray',p1:ids[0],p2:ids[1]});recordAction('ray',{points:ids,names:ids.map(pointName)});log('半直線を作成')}if(current==='circle'){addObj({kind:'circle',center:ids[0],through:ids[1]});const _a=P(ids[0]),_b=P(ids[1]);recordAction('circle',{center:ids[0],through:ids[1],centerName:pointName(ids[0]),throughName:pointName(ids[1]),radiusPx:_a&&_b?dist(_a,_b):null,radiusGrid:_a&&_b?(dist(_a,_b)/24).toFixed(2):null});log('円を作成')}if(current==='perpbin'){addObj({kind:'perpline',pA:ids[0],pB:ids[1]});recordAction('perpbin',{points:ids,names:ids.map(pointName)});log('垂直二等分線を作成')}if(current==='bisect'){addObj({kind:'bisline',pA:ids[0],pV:ids[1],pC:ids[2]});recordAction('bisect',{points:ids,names:ids.map(pointName)});log('角の二等分線を作成')}if(current==='mlen'){measures.push({type:'len',p:ids});recordAction('measureLen',{points:ids,names:ids.map(pointName)});log('長さを測定')}if(current==='mang'){measures.push({type:'ang',p:ids});recordAction('measureAng',{points:ids,names:ids.map(pointName)});log('角度を測定')}lastAction={tool:current,ids};render();updateReadout();autoJudge();return}if(current==='point'){const p=pointHere(pos);lastAction={tool:'point',point:p.name,sub:p.sub};recordAction('point',{point:p.id,name:p.name,sub:p.sub,parent:p.parent||null});log((p.sub==='on'?'図形上の点':p.sub==='inter'?'交点':'点')+' '+p.name+' を作成');render();autoJudge();return}if(current==='parallel'||current==='perpendicular'){if(pending.length===0){const o=objAt(pos,'lineLike');if(!o){toast('先に基準線を選んでください','warn');history.pop();return}pending.push({type:'obj',id:o.id});render();return}else{const pt=pointHere(pos),ref=pending[0].id;pending=[];addObj({kind:current,refLine:ref,point:pt.id});recordAction(current,{ref,point:pt.id,pointName:pt.name});lastAction={tool:current,ref,point:pt.id};log(TOOL_LABEL[current]+'を作成');render();autoJudge();return}}if(current==='tangent'){if(pending.length===0){const c=objAt(pos,'circle');if(!c){toast('先に円を選んでください','warn');history.pop();return}pending.push({type:'obj',id:c.id});render();return}else{const cid=pending[0].id;let pt=pointAt(pos);if(!pt)pt=addOnPoint(cid,pos);pending=[];addObj({kind:'tangent',circle:cid,point:pt.id});recordAction('tangent',{circle:cid,point:pt.id,pointName:pt.name});lastAction={tool:'tangent',circle:cid,point:pt.id};log('接線を作成');render();autoJudge();return}}}
+function eraseObj(id){const dead=new Set([id]);let changed=true;while(changed){changed=false;objs.forEach(o=>{const refs=[o.p1,o.p2,o.center,o.through,o.par1,o.par2,o.pA,o.pB,o.pV,o.pC,o.parent,o.refLine,o.point,o.circle].filter(Boolean);if(!dead.has(o.id)&&refs.some(r=>dead.has(r))){dead.add(o.id);changed=true}})}objs=objs.filter(o=>!dead.has(o.id));measures=measures.filter(m=>!m.p.some(r=>dead.has(r)))}
+function measurementSummary(){return measures.map(m=>{if(m.type==='len'){const a=P(m.p[0]),b=P(m.p[1]);return a&&b?`${a.name}${b.name}=${(dist(a,b)/24).toFixed(2)}`:null}if(m.type==='ang'){const A=P(m.p[0]),V=P(m.p[1]),C=P(m.p[2]);if(A&&V&&C){let d=angleNorm(Math.atan2(C.y-V.y,C.x-V.x)-Math.atan2(A.y-V.y,A.x-V.x));return `∠${A.name}${V.name}${C.name}=${Math.abs(d*180/Math.PI).toFixed(1)}°`}}}).filter(Boolean)}function updateReadout(){if(!measures.length){readVal.innerHTML='<span class="muted">長さ・角度ツールで点を選んでください。</span>';renderProof();return}readVal.innerHTML=measurementSummary().slice(-8).map(x=>x.replace('=',' = <b>')+'</b>').join('<br>');renderProof()}
+function clearAll(){objs=[];measures=[];pending=[];namec=0;idc=0;actionLog=[];actionFrames=[];replayIndex=-1;renderAuditTrail();refreshReplayState();render();updateReadout()}function addOnCircle(c,ang,name){const{c:cc,R}=circleParams(c);return addObj({kind:'point',sub:'on',parent:c.id,param:ang,x:cc.x+Math.cos(ang)*R,y:cc.y+Math.sin(ang)*R,name:name||nextName()})}
+function setupScene(){pushHistory();clearAll();const scene=taskObj().scene||unitType();if(scene==='circle'||scene==='tangent'){const O=addFreePoint(390,280);O.name='O';const R=addFreePoint(530,280);R.name='R';const cir=addObj({kind:'circle',center:O.id,through:R.id});const A=addOnCircle(cir,Math.PI*1.12,'A'),B=addOnCircle(cir,Math.PI*1.88,'B'),Pp=addOnCircle(cir,Math.PI*.52,'P'),Q=addOnCircle(cir,Math.PI*.22,'Q');addObj({kind:'segment',p1:A.id,p2:Pp.id});addObj({kind:'segment',p1:Pp.id,p2:B.id});addObj({kind:'segment',p1:A.id,p2:Q.id});addObj({kind:'segment',p1:Q.id,p2:B.id});addObj({kind:'segment',p1:O.id,p2:A.id});addObj({kind:'segment',p1:O.id,p2:B.id});if(scene==='tangent')addObj({kind:'tangent',circle:cir.id,point:Pp.id});measures.push({type:'ang',p:[A.id,Pp.id,B.id]},{type:'ang',p:[A.id,Q.id,B.id]},{type:'ang',p:[A.id,O.id,B.id]});setHint('円周上の点を動かして、角度や接線との関係を観察しましょう。')}else if(scene==='parallel'){const A=addFreePoint(260,250);A.name='A';const B=addFreePoint(620,250);B.name='B';const l1=addObj({kind:'line',p1:A.id,p2:B.id});const P0=addFreePoint(320,350);P0.name='P';addObj({kind:'parallel',refLine:l1.id,point:P0.id});const C=addFreePoint(360,160);C.name='C';const D=addFreePoint(500,440);D.name='D';addObj({kind:'line',p1:C.id,p2:D.id});measures.push({type:'ang',p:[B.id,A.id,C.id]});setHint('平行な2直線と横切る直線を動かし、等しい角を探しましょう。')}else if(scene==='pythagoras'||scene==='trig'){const A=addFreePoint(300,420);A.name='A';const B=addFreePoint(620,420);B.name='B';const C=addFreePoint(300,220);C.name='C';addObj({kind:'segment',p1:A.id,p2:B.id});addObj({kind:'segment',p1:A.id,p2:C.id});addObj({kind:'segment',p1:C.id,p2:B.id});measures.push({type:'len',p:[A.id,B.id]},{type:'len',p:[A.id,C.id]},{type:'len',p:[C.id,B.id]},{type:'ang',p:[B.id,A.id,C.id]});setHint('直角三角形の3辺を測り、辺の関係を調べましょう。')}else if(scene==='similar_parallel'){const A=addFreePoint(270,430);A.name='A';const B=addFreePoint(720,430);B.name='B';const C=addFreePoint(380,180);C.name='C';addObj({kind:'segment',p1:A.id,p2:B.id});addObj({kind:'segment',p1:A.id,p2:C.id});addObj({kind:'segment',p1:B.id,p2:C.id});const D=addFreePoint(340,300);D.name='D';const E=addFreePoint(560,300);E.name='E';addObj({kind:'segment',p1:D.id,p2:E.id});measures.push({type:'ang',p:[B.id,A.id,C.id]},{type:'ang',p:[E.id,D.id,C.id]});setHint('三角形の一辺に平行な線でできる小さい三角形に注目します。')}else if(scene==='similar'||scene==='congruence'){const A=addFreePoint(280,360);A.name='A';const B=addFreePoint(430,360);B.name='B';const C=addFreePoint(330,240);C.name='C';const D=addFreePoint(560,400);D.name='D';const E=addFreePoint(760,400);E.name='E';const F=addFreePoint(625,240);F.name='F';[[A,B],[B,C],[C,A],[D,E],[E,F],[F,D]].forEach(pair=>addObj({kind:'segment',p1:pair[0].id,p2:pair[1].id}));measures.push({type:'ang',p:[B.id,A.id,C.id]},{type:'ang',p:[E.id,D.id,F.id]},{type:'len',p:[A.id,B.id]},{type:'len',p:[D.id,E.id]});setHint('対応する辺・角を決めて、合同または相似の条件を考えましょう。')}else if(scene==='circlepoly'){const O=addFreePoint(420,300);O.name='O';const R=addFreePoint(560,300);R.name='R';const cir=addObj({kind:'circle',center:O.id,through:R.id});const pts=[];for(let i=0;i<6;i++)pts.push(addOnCircle(cir,Math.PI/3*i,String.fromCharCode(65+i)));for(let i=0;i<6;i++)addObj({kind:'segment',p1:pts[i].id,p2:pts[(i+1)%6].id});pts.slice(0,3).forEach(pt=>{addObj({kind:'segment',p1:O.id,p2:pt.id});measures.push({type:'len',p:[O.id,pt.id]})});setHint('半径を保ちながら、円と正多角形の関係を観察しましょう。')}else if(scene==='symmetry'){const L1=addFreePoint(480,150);L1.name='L';const L2=addFreePoint(480,500);L2.name='M';addObj({kind:'line',p1:L1.id,p2:L2.id});const A=addFreePoint(330,240);A.name='A';const Ap=addFreePoint(630,240);Ap.name="A'";const B=addFreePoint(360,380);B.name='B';const Bp=addFreePoint(600,380);Bp.name="B'";[[A,Ap],[B,Bp],[A,B],[Ap,Bp]].forEach(pair=>addObj({kind:'segment',p1:pair[0].id,p2:pair[1].id}));measures.push({type:'len',p:[A.id,Ap.id]},{type:'len',p:[B.id,Bp.id]});setHint('対応する点と対称の軸の関係を調べましょう。')}else if(scene==='area'){const A=addFreePoint(280,420);A.name='A';const B=addFreePoint(680,420);B.name='B';const C=addFreePoint(380,250);C.name='C';const D=addFreePoint(570,250);D.name='D';[[A,B],[A,C],[B,C],[A,D],[B,D]].forEach(pair=>addObj({kind:'segment',p1:pair[0].id,p2:pair[1].id}));const base=addObj({kind:'line',p1:A.id,p2:B.id});addObj({kind:'parallel',refLine:base.id,point:C.id});measures.push({type:'len',p:[A.id,B.id]});setHint('頂点を底辺に平行な線上で動かし、高さと面積の関係を考えましょう。')}else if(scene==='vector'){const A=addFreePoint(300,380);A.name='A';const B=addFreePoint(500,300);B.name='B';const D=addFreePoint(420,460);D.name='D';const C=addFreePoint(620,380);C.name='C';[[A,B],[B,C],[C,D],[D,A],[A,C]].forEach(pair=>addObj({kind:'segment',p1:pair[0].id,p2:pair[1].id}));measures.push({type:'len',p:[A.id,B.id]},{type:'len',p:[D.id,C.id]});setHint('平行四辺形の対角線を、2つの移動の合成として見ましょう。')}else if(scene==='locus'){const O=addFreePoint(430,310);O.name='O';const R=addFreePoint(580,310);R.name='P';const cir=addObj({kind:'circle',center:O.id,through:R.id});addObj({kind:'segment',p1:O.id,p2:R.id});measures.push({type:'len',p:[O.id,R.id]});setHint('条件を保って動く点の集まりを予想しましょう。')}else if(scene==='coordinate'){const O=addFreePoint(430,300);O.name='O';const R=addFreePoint(560,300);R.name='R';addObj({kind:'circle',center:O.id,through:R.id});const A=addFreePoint(250,210);A.name='A';const B=addFreePoint(700,390);B.name='B';addObj({kind:'line',p1:A.id,p2:B.id});measures.push({type:'len',p:[O.id,R.id]});setHint('円と直線の位置関係を、交点の個数で分類しましょう。')}else{const A=addFreePoint(300,360);A.name='A';const B=addFreePoint(520,360);B.name='B';const C=addFreePoint(430,220);C.name='C';addObj({kind:'segment',p1:A.id,p2:B.id});addObj({kind:'segment',p1:B.id,p2:C.id});addObj({kind:'segment',p1:C.id,p2:A.id});measures.push({type:'len',p:[A.id,B.id]},{type:'ang',p:[B.id,A.id,C.id]});setHint('頂点を動かし、変わるもの・変わらないものを分けて観察しましょう。')}render();updateReadout();log('課題テンプレートの図を作成');toast('課題の図を作りました')}
+document.getElementById('unitSceneBtn').onclick=setupScene;document.getElementById('hintBtn').onclick=()=>{const arr=taskObj().hints||[];const out=document.getElementById('lessonHint');out.classList.remove('hidden');out.textContent=arr.length?arr[hintLevel%arr.length]:'まず「動かす点」と「変わらない量」を探しましょう。';hintLevel++};document.getElementById('resetHints').onclick=()=>{hintLevel=0;document.getElementById('lessonHint').classList.add('hidden')};
+function analyzeMemoText(){const txt=document.getElementById('memoText').value||'';const keys=[['等しい',['等しい','同じ','一致','変わらない']],['平行',['平行','同位角','錯角']],['垂直',['垂直','直角','90°','90度']],['同じ弧',['同じ弧','弧AB','弦AB','円周角']],['対応する辺・角',['対応','相似比','合同条件','相似条件']],['半径・接線',['半径','接線','接点']],['三平方',['三平方','a²','b²','c²','平方']],['理由づけ',['だから','より','したがって','根拠']]];const hits=keys.map(([label,words])=>({label,hit:words.some(w=>txt.includes(w)),words}));const score=hits.filter(x=>x.hit).length;let advice=[];if(!txt.trim())advice.push('観察メモが未記入です。まず「何を動かしたか」を書くと確認しやすくなります。');if(!hits.find(x=>x.label==='理由づけ').hit)advice.push('「だから」「より」などを使って、観察と根拠をつなぐ文にすると証明へ進みやすくなります。');if(!selectedEvidence().length)advice.push('根拠カードを1つ以上選ぶと、証明の骨組みとつながります。');return {score,max:keys.length,hits,advice,summary:'検出語 '+score+'/'+keys.length+'：'+(hits.filter(x=>x.hit).map(x=>x.label).join('、')||'なし')}}
+function renderMemoAnalysis(){const r=analyzeMemoText();const box=document.getElementById('memoScore');box.classList.remove('hidden');box.innerHTML='<b>先生用メモ分析：</b> '+r.summary+'<div>'+r.hits.map(x=>'<span class="kw '+(x.hit?'hit':'')+'">'+(x.hit?'○ ':'△ ')+x.label+'</span>').join('')+'</div>'+(r.advice.length?'<ul>'+r.advice.map(a=>'<li>'+a+'</li>').join('')+'</ul>':'<p class="small">観察語と理由づけが入っています。</p>');return r}
+async function copyMemoSummary(){const r=renderMemoAnalysis();const s='観察メモ分析：'+r.summary+'\n助言：'+(r.advice.join(' / ')||'大きな不足はありません')+'\nメモ：'+(document.getElementById('memoText').value||'');try{await navigator.clipboard.writeText(s);toast('先生用要約をコピーしました')}catch(e){prompt('この内容をコピーしてください',s)}}document.getElementById('analyzeMemo').onclick=renderMemoAnalysis;document.getElementById('copyMemoSummary').onclick=copyMemoSummary;document.getElementById('memoText').addEventListener('input',()=>{const box=document.getElementById('memoScore');if(!box.classList.contains('hidden'))renderMemoAnalysis()});
+function populateTeacherFields(){const t=teacherTask;if(!t)return;document.getElementById('teacherTitle').value=t.title||'';document.getElementById('teacherPrompt').value=t.prompt||'';document.getElementById('teacherHints').value=(t.hints||[]).join('\n');document.getElementById('teacherEvidence').value=(t.evidence||[]).join('、');document.getElementById('teacherProof').value=(t.proof||'').replace(/<[^>]+>/g,'')}
+document.getElementById('taskPackFile').onchange=e=>{const f=e.target.files[0];if(f)loadTaskPackFile(f)};document.getElementById('exportTaskPack').onclick=()=>download('作図ノート_課題パック.json',new Blob([JSON.stringify(currentTaskPack(),null,2)],{type:'application/json'}));document.getElementById('exportScenario').onclick=()=>download('作図ノート_授業シナリオ.json',new Blob([JSON.stringify({unit:unitObj()[1],task:taskObj().title,scenario:scenarioForUnit()},null,2)],{type:'application/json'}));document.getElementById('copyScenario').onclick=async()=>{const s=scenarioForUnit();const text=['授業シナリオ：'+unitObj()[1]+' / '+taskObj().title,'導入：'+s.intro,'自由探索：'+s.explore,'発見共有：'+s.share,'証明：'+s.proof,'練習問題：'+s.practice].join('\n');try{await navigator.clipboard.writeText(text);toast('シナリオ要約をコピーしました')}catch(e){prompt('この内容をコピーしてください',text)}};
+function rubricSuggestion(){const memo=analyzeMemoText();const j=activitySelect.value==='construction'?judgeConstruction(false):null;const judgeRate=j&&j.checks?j.checks.filter(x=>x.ok).length/Math.max(1,j.checks.length):0;const ev=selectedEvidence().length;return {procedure:Math.round((judgeRate||0.5)*4),target:Math.round((judgeRate||0.5)*4),meaning:Math.min(4,Math.round(memo.score/2)+(ev?1:0)),observation:Math.min(4,Math.round(memo.score/2)),proof:Math.min(4,(ev?2:0)+(memo.hits.find(x=>x.label==='理由づけ')?.hit?2:0))}}
+function renderRubric(auto=true){const r=auto?rubricSuggestion():{procedure:0,target:0,meaning:0,observation:0,proof:0};const labels={procedure:'手順通りに作図できた',target:'正しい対象を選択できた',meaning:'作図の意味を説明できた',observation:'観察メモが具体的である',proof:'根拠を使って証明へ接続できた'};document.getElementById('rubricInputs').innerHTML=Object.keys(labels).map(k=>'<div class="rubricItem"><label>'+labels[k]+'（0〜4）</label><input data-rubric="'+k+'" type="number" min="0" max="4" value="'+r[k]+'"></div>').join('');updateRubricTotal();document.querySelectorAll('[data-rubric]').forEach(i=>i.oninput=updateRubricTotal)}
+function updateRubricTotal(){const vals=[...document.querySelectorAll('[data-rubric]')].map(i=>Math.max(0,Math.min(4,Number(i.value)||0)));const total=vals.reduce((a,b)=>a+b,0);document.getElementById('rubricAuto').innerHTML='<span class="scoreBig">'+total+'/20</span><br>先生が各観点の点数を調整できます。'}
+function rubricData(){return {total:[...document.querySelectorAll('[data-rubric]')].reduce((s,i)=>s+(Number(i.value)||0),0),items:[...document.querySelectorAll('[data-rubric]')].map(i=>({key:i.dataset.rubric,score:Number(i.value)||0}))}}
+document.getElementById('autoRubric').onclick=()=>renderRubric(true);document.getElementById('exportRubric').onclick=()=>download('作図ノート_ルーブリック評価.json',new Blob([JSON.stringify({lesson:{unit:unitObj()[1],task:taskObj().title},rubric:rubricData(),memoAnalysis:analyzeMemoText(),evidence:selectedEvidence()},null,2)],{type:'application/json'}));renderRubric(true);
+function captureFrame(){return {objs:JSON.parse(JSON.stringify(objs)),measures:JSON.parse(JSON.stringify(measures)),idc,namec}}
+function applyFrame(frame){if(!frame)return;objs=JSON.parse(JSON.stringify(frame.objs||[]));measures=JSON.parse(JSON.stringify(frame.measures||[]));idc=frame.idc||idc;namec=frame.namec||namec;pending=[];render();updateReadout()}
+function refreshReplayState(){const box=document.getElementById('replayState');const n=actionFrames.length;if(!n){box.textContent='作図操作を行うと、ここから履歴を再生できます。';return}const i=replayIndex<0?n-1:replayIndex;const e=actionFrames[i]?.entry;box.textContent=(i+1)+'/'+n+'　'+(e?actionLabel(e.kind)+' '+actionDetailText(e):'')}
+function replayTo(i){if(!actionFrames.length)return;replayIndex=Math.max(0,Math.min(i,actionFrames.length-1));applyFrame(actionFrames[replayIndex].frame);refreshReplayState();updateReplayProgress();renderReplayComments()}
+document.getElementById('replayFirst').onclick=()=>{stopReplay();replayTo(0)};document.getElementById('replayPrev').onclick=()=>{stopReplay();replayTo((replayIndex<0?actionFrames.length-1:replayIndex)-1)};document.getElementById('replayNext').onclick=()=>{stopReplay();replayTo((replayIndex<0?0:replayIndex)+1)};document.getElementById('replayPlay').onclick=startReplay;document.getElementById('replayPause').onclick=stopReplay;document.getElementById('replaySpeed').oninput=function(){document.getElementById('replaySpeedLabel').textContent=this.value+'ms';if(replayTimer){stopReplay();startReplay()}};document.getElementById('addReplayComment').onclick=addReplayComment;
+function startReplay(){if(!actionFrames.length)return;document.getElementById('replayPlay').style.display='none';document.getElementById('replayPause').style.display='';document.getElementById('replayCommentBox').style.display='';if(replayIndex<0||replayIndex>=actionFrames.length-1)replayTo(0);replayTimer=setInterval(()=>{if(replayIndex>=actionFrames.length-1){stopReplay();return}replayTo(replayIndex+1)},Number(document.getElementById('replaySpeed').value)||850)}
+function stopReplay(){if(replayTimer){clearInterval(replayTimer);replayTimer=null}document.getElementById('replayPlay').style.display='';document.getElementById('replayPause').style.display='none'}
+function updateReplayProgress(){const n=actionFrames.length;if(!n)return;const pct=((replayIndex+1)/n)*100;document.getElementById('replayProgressBar').style.width=pct+'%'}
+const origReplayTo=replayTo;replayTo=function(i){origReplayTo(i);updateReplayProgress();renderReplayComments()}
+function addReplayComment(){const input=document.getElementById('replayCommentInput');const text=text.trim();if(!text||replayIndex<0)return;const frame=actionFrames[replayIndex];if(!frame.comments)frame.comments=[];frame.comments.push({time:new Date().toLocaleString('ja-JP'),text});input.value='';renderReplayComments()}
+function renderReplayComments(){const box=document.getElementById('replayComments');if(replayIndex<0||!actionFrames[replayIndex]||!actionFrames[replayIndex].comments){box.innerHTML='';return}box.innerHTML=actionFrames[replayIndex].comments.map(c=>'<div style="background:#f1f5f9;border-radius:6px;padding:4px 8px;margin-bottom:3px"><span style="color:#94a3b8">'+c.time+'</span> '+c.text+'</div>').join('')}
+function renderSubmissionTable(){const box=document.getElementById('submissionTable');if(!loadedSubmissions.length){box.innerHTML='<table><tbody><tr><td>提出データはまだ読み込まれていません。</td></tr></tbody></table>';return}box.innerHTML='<table><thead><tr><th>#</th><th>単元/課題</th><th>メモ</th><th>根拠</th><th>測定</th><th>評価案</th><th>ログ</th></tr></thead><tbody>'+loadedSubmissions.map((s,i)=>{const lesson=s.lesson||{};const memo=(s.memo||'').slice(0,70);const ev=(s.evidence||[]).join('、');const meas=(s.measurements||[]).slice(0,3).join('、');const ma=s.memoAnalysis?('メモ '+s.memoAnalysis.score+'/'+s.memoAnalysis.max):'';const logs=(s.actionLog||s.opLog||[]).length;return '<tr><td>'+(i+1)+'</td><td>'+(lesson.unit||'')+'<br>'+(lesson.task||'')+'</td><td>'+memo+'</td><td>'+ev+'</td><td>'+meas+'</td><td>'+ma+'</td><td>'+logs+'件</td></tr>'}).join('')+'</tbody></table>'}
+document.getElementById('submissionFiles').onchange=e=>{const files=[...e.target.files];if(!files.length)return;let left=files.length;files.forEach(f=>{const r=new FileReader();r.onload=()=>{try{loadedSubmissions.push(JSON.parse(r.result));}catch(err){console.warn(err)}left--;if(left===0){renderSubmissionTable();toast('提出一覧を更新しました')}};r.readAsText(f)})};document.getElementById('clearSubmissions').onclick=()=>{loadedSubmissions=[];renderSubmissionTable()};
+function getTeacherTask(){return{custom:true,id:'teacher_'+Date.now(),title:document.getElementById('teacherTitle').value||'先生作成課題',prompt:document.getElementById('teacherPrompt').value||'図を動かして、変わらない性質を見つけましょう。',hints:document.getElementById('teacherHints').value.split('\n').map(s=>s.trim()).filter(Boolean),evidence:document.getElementById('teacherEvidence').value.split(/[、,]/).map(s=>s.trim()).filter(Boolean),proof:document.getElementById('teacherProof').value||'観察したことを、根拠を使って説明しましょう。',checks:['図を動かした','観察メモを書いた','根拠カードを選んだ'],scene:'teacher'}}document.getElementById('applyTeacherTask').onclick=()=>{teacherTask=getTeacherTask();updatePanels();toast('先生課題を適用しました')};document.getElementById('saveTeacherTask').onclick=()=>{teacherTask=getTeacherTask();download('作図ノート_先生課題.json',new Blob([JSON.stringify({teacherTask,state:getState()},null,2)],{type:'application/json'}));toast('先生課題を保存しました')};
+function getChecks(){return [...document.querySelectorAll('#lessonChecklist input')].map((x,i)=>({text:x.parentElement.textContent.trim(),checked:x.checked}))}function getState(){return{version:8,objs,measures,idc,namec,grade:gradeSelect.value,unit:unitSelect.value,template:document.getElementById('templateSelect').value,activity:activitySelect.value,opLog,actionLog,actionFrames,teacherTask,memo:document.getElementById('memoText').value,evidence:selectedEvidence(),checks:getChecks(),measurements:measurementSummary()}}function getSubmission(){return{type:'作図ノート提出データ',createdAt:new Date().toISOString(),lesson:{grade:gradeSelect.options[gradeSelect.selectedIndex].text,unit:unitObj()[1],task:taskObj().title,prompt:taskObj().prompt},memo:document.getElementById('memoText').value,evidence:selectedEvidence(),checks:getChecks(),measurements:measurementSummary(),memoAnalysis:analyzeMemoText(),rubric:rubricData(),construction:{task:document.getElementById('constructSelect').value,judge:activitySelect.value==='construction'?judgeConstruction(false):null},opLog,actionLog,actionFrames,drawing:getState()}}function submitJSON(){download('作図ノート_生徒提出データ.json',new Blob([JSON.stringify(getSubmission(),null,2)],{type:'application/json'}));toast('提出データを出力しました')}function submitSummary(){const s=getSubmission();const text=['作図ノート 提出まとめ','日時: '+new Date().toLocaleString('ja-JP'),'単元: '+s.lesson.grade+'・'+s.lesson.unit,'課題: '+s.lesson.task,'問い: '+s.lesson.prompt,'','観察メモ:',s.memo||'（未記入）','','選んだ根拠: '+(s.evidence.join('、')||'（未選択）'),'測定値: '+(s.measurements.join('、')||'なし'),'','チェック:'].concat(s.checks.map(c=>(c.checked?'[x] ':'[ ] ')+c.text),['','操作ログ:'],s.opLog).join('\n');download('作図ノート_提出まとめ.txt',new Blob([text],{type:'text/plain'}));toast('提出まとめを出力しました')}document.getElementById('downloadSubmit').onclick=submitJSON;document.getElementById('summarySubmit').onclick=submitSummary;
+function setState(s){objs=s.objs||[];measures=s.measures||[];idc=s.idc||0;namec=s.namec||0;opLog=s.opLog||[];actionLog=s.actionLog||[];actionFrames=s.actionFrames||[];replayIndex=actionFrames.length-1;teacherTask=s.teacherTask||null;document.getElementById('memoText').value=s.memo||'';if(s.grade)gradeSelect.value=s.grade;renderUnitOptions();if(s.unit)unitSelect.value=s.unit;if(s.template)document.getElementById('templateSelect').value=s.template;if(s.activity)activitySelect.value=s.activity;pending=[];if(teacherTask){activitySelect.value='teacher';populateTeacherFields()}updatePanels();render();updateReadout();renderLog();renderAuditTrail();refreshReplayState();renderRubric(true)}function download(name,blob){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}function saveJSON(){download('作図ノート_v8_保存データ.json',new Blob([JSON.stringify(getState(),null,2)],{type:'application/json'}));toast('保存データを出力しました')}document.getElementById('loadFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{pushHistory();const data=JSON.parse(r.result);const loaded=data.state||data.drawing||data;if(data.teacherTask&&!loaded.teacherTask)loaded.teacherTask=data.teacherTask;setState(loaded);if(loaded.teacherTask||data.teacherTask){teacherTask=loaded.teacherTask||data.teacherTask;populateTeacherFields();activitySelect.value='teacher';updatePanels();toast('先生課題を復元しました')}else{toast('読み込みました')}}catch(err){alert('読み込めませんでした: '+err.message)}};r.readAsText(f)};
+function exportSVGString(){const r=board.getBoundingClientRect(),w=Math.max(900,Math.round(r.width)),h=Math.max(600,Math.round(r.height));return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><defs><pattern id="g" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" fill="none" stroke="#d8e1ed" stroke-width="1"/></pattern></defs><rect width="100%" height="100%" fill="#fffdf7"/><rect width="100%" height="100%" fill="url(#g)"/><style>.obj-line{stroke:#4b5d78;stroke-width:2.2;fill:none}.obj-circle{stroke:#c45d7a;stroke-width:2.2;fill:none}.obj-aux{stroke:#c45d7a;stroke-width:1.5;stroke-dasharray:5 4;fill:none}.pt{stroke:white;stroke-width:1.7}.free{fill:#2f7dd3}.on{fill:#1f9b72}.inter{fill:#d87824}.pt-hit{display:none}.lbl{font:800 13px sans-serif;fill:#26364d;paint-order:stroke;stroke:#fff;stroke-width:4}.measure{font:700 12px sans-serif;fill:#137a59;paint-order:stroke;stroke:#fff;stroke-width:4}</style>${board.innerHTML}</svg>`}function exportSVG(){download('作図ノート_v8_.svg',new Blob([exportSVGString()],{type:'image/svg+xml'}));toast('SVGを書き出しました')}function exportPNG(){const svg=exportSVGString(),img=new Image(),url=URL.createObjectURL(new Blob([svg],{type:'image/svg+xml'}));img.onload=()=>{const c=document.createElement('canvas');c.width=img.width;c.height=img.height;const ctx=c.getContext('2d');ctx.fillStyle='#fffdf7';ctx.fillRect(0,0,c.width,c.height);ctx.drawImage(img,0,0);c.toBlob(b=>download('作図ノート_v8_図.png',b),'image/png');URL.revokeObjectURL(url);toast('PNGを書き出しました')};img.src=url}function enc(str){const bytes=new TextEncoder().encode(str);let bin='';bytes.forEach(b=>bin+=String.fromCharCode(b));return btoa(bin)}function dec(b64){const bin=atob(b64);const bytes=Uint8Array.from(bin,c=>c.charCodeAt(0));return new TextDecoder().decode(bytes)}async function shareURL(){const data=enc(JSON.stringify(getState())),url=location.href.split('#')[0]+'#data='+data;try{await navigator.clipboard.writeText(url);toast('共有URLをコピーしました')}catch(e){prompt('このURLをコピーしてください',url)}}function loadHash(){if(location.hash.startsWith('#data=')){try{setState(JSON.parse(dec(location.hash.slice(6))));toast('URLから図を読み込みました')}catch(e){console.warn(e)}}}
+let currentMapFilter='all';function gradeKeyFromMap(g){return g==='小'?'elementary':g==='中'?'middle':'high'}function unitIdByName(g,u){const arr=UNIT_DATA[gradeKeyFromMap(g)]||[];const hit=arr.find(x=>x[1]===u);return hit?hit[0]:null}
+function jumpToCurriculumUnit(g,u){const grade=gradeKeyFromMap(g),uid=unitIdByName(g,u);if(!uid)return;gradeSelect.value=grade;renderUnitOptions();unitSelect.value=uid;teacherTask=null;renderTemplateOptions();activitySelect.value='lesson';updatePanels();document.getElementById('templateSelect').focus();toast(g+'・'+u+'へ移動しました')}
+function renderCurrMap(filter='all'){currentMapFilter=filter;const rows=CURRICULUM_MAP.filter(r=>filter==='all'||(filter==='elementary'&&r.g==='小')||(filter==='middle'&&r.g==='中')||(filter==='high'&&r.g==='高'));document.getElementById('currMap').innerHTML='<table><thead><tr><th>学</th><th>単元</th><th>道具</th><th>図形</th><th>定理・性質</th><th>作図</th><th>証明</th><th>典型課題</th></tr></thead><tbody>'+rows.map(r=>`<tr data-g="${r.g}" data-unit="${r.unit}" title="クリックでこの単元へ移動"><td>${r.g}</td><td>${r.unit}</td><td>${r.tools}</td><td>${r.fig}</td><td>${r.th}</td><td>${r.con}</td><td>${r.proof}</td><td>${r.task}</td></tr>`).join('')+'</tbody></table>';document.querySelectorAll('#currMap tbody tr').forEach(tr=>tr.onclick=()=>jumpToCurriculumUnit(tr.dataset.g,tr.dataset.unit))}document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');renderCurrMap(b.dataset.map)});document.getElementById('mapJumpBtn').onclick=()=>document.getElementById('curriculumPanel').scrollIntoView({behavior:'smooth',block:'start'});
+document.querySelectorAll('#topbar button').forEach(b=>b.onclick=()=>{const c=b.dataset.cmd;if(c==='undo')undo();if(c==='clear'){pushHistory();clearAll();log('全消去')}if(c==='save')saveJSON();if(c==='submit')submitJSON();if(c==='svg')exportSVG();if(c==='png')exportPNG();if(c==='share')shareURL()});document.getElementById('labelToggle').onchange=render;
+renderUnitOptions();activitySelect.value='lesson';updatePanels();selectTool('select');setHint('v6では、外部課題パックJSON、ルーブリック評価、複数提出の先生ビュー、授業シナリオ、作図履歴再生を追加しました。');loadHash();render();updateReadout();renderLog();renderAuditTrail();refreshReplayState();renderRubric(true);renderCurrMap('all');
+
+// ===== フェーズ1: 証明の文章化 =====
+function buildProofSentence(){
+  const c1=document.getElementById('conn1').value;
+  const c2=document.getElementById('conn2').value;
+  const c3=document.getElementById('conn3').value;
+  const premise=document.getElementById('premiseText').value.trim();
+  const reason=document.getElementById('reasonText').value.trim();
+  const conclusion=document.getElementById('conclusionText').value.trim();
+  let html='<div style="background:#fff;border:1px solid #e0e3ff;border-radius:8px;padding:10px;font-size:13px;line-height:2">';
+  if(premise) html+='<div><b>前提：</b>'+c1+'、'+premise+'</div>';
+  if(reason) html+='<div><b>根拠：</b>'+c2+'、'+reason+'</div>';
+  if(conclusion) html+='<div><b>結論：</b>'+c3+'、'+conclusion+'</div>';
+  html+='</div>';
+  document.getElementById('proofSentenceResult').innerHTML=html;
+}
+function checkProofSentence(){
+  const premise=document.getElementById('premiseText').value.trim();
+  const reason=document.getElementById('reasonText').value.trim();
+  const conclusion=document.getElementById('conclusionText').value.trim();
+  const checks=[];
+  if(premise.length>10) checks.push('✓ 前提が書かれている'); else checks.push('✗ 前提をもう少し具体的に書こう');
+  if(reason.length>10) checks.push('✓ 根拠が書かれている'); else checks.push('✗ 根拠をもう少し具体的に書こう');
+  if(conclusion.length>5) checks.push('✓ 結論が書かれている'); else checks.push('✗ 結論を書こう');
+  if(premise.includes('△')||premise.includes('角')||premise.includes('辺')) checks.push('✓ 図の要素が前提に含まれている');
+  if(reason.includes('よって')||reason.includes('だから')||reason.includes('したがって')) checks.push('✓ 接続詞が使われている');
+  const score=checks.filter(c=>c.startsWith('✓')).length;
+  document.getElementById('proofSentenceResult').innerHTML='<div class="scoreBox"><b>文章チェック '+score+'/'+checks.length+'</b><br>'+checks.join('<br>')+'</div>';
+}
+function exportProofSentence(){
+  const data={premise:{connector:document.getElementById('conn1').value,text:document.getElementById('premiseText').value},reason:{connector:document.getElementById('conn2').value,text:document.getElementById('reasonText').value},conclusion:{connector:document.getElementById('conn3').value,text:document.getElementById('conclusionText').value},unit:unitObj()[1],task:taskObj().title};
+  download('作図ノート_証明文章.json',new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));
+}
+document.getElementById('buildProofSentence').onclick=buildProofSentence;
+document.getElementById('checkProofSentence').onclick=checkProofSentence;
+document.getElementById('exportProofSentence').onclick=exportProofSentence;
+
+// ===== フェーズ1: 縦接続 =====
+const PREREQ_MAP={
+  circle:{prereq:['angle','parallel'],next:['trig','coordinate']},
+  parallel:{prereq:['angle'],next:['congruence','similar']},
+  congruence:{prereq:['parallel','angle'],next:['similar','pythagoras']},
+  similar:{prereq:['parallel','congruence'],next:['pythagoras','trig']},
+  pythagoras:{prereq:['congruence','similar'],next:['trig','coordinate']},
+  area:{prereq:['parallel','angle'],next:['similar','pythagoras']},
+  symmetry:{prereq:[],next:['congruence','circlepoly']},
+  circlepoly:{prereq:['symmetry','angle'],next:['circle']},
+  trig:{prereq:['similar','pythagoras'],next:['vector','coordinate']},
+  vector:{prereq:['trig','parallel'],next:['coordinate','locus']},
+  locus:{prereq:['circle','coordinate'],next:['coordinate']},
+  coordinate:{prereq:['pythagoras','trig'],next:['locus','vector']},
+  angle:{prereq:[],next:['parallel','symmetry']},
+  default:{prereq:[],next:[]}
+};
+const UNIT_LABELS={circle:'円周角',parallel:'平行線と角',congruence:'三角形の合同',similar:'三角形の相似',pythagoras:'三平方の定理',area:'面積と等積変形',symmetry:'対称',circlepoly:'円と正多角形',trig:'三角比',vector:'ベクトル',locus:'軌跡',coordinate:'図形と方程式',angle:'角の大きさ'};
+function renderPrereq(){
+  const u=unitType();
+  const map=PREREQ_MAP[u]||PREREQ_MAP.default;
+  const prereqHtml=map.prereq.length?map.prereq.map(k=>'<span class="prereqTag">'+(UNIT_LABELS[k]||k)+'</span>').join(''):'<span class="prereqTag">なし（最初の単元）</span>';
+  const nextHtml=map.next.length?map.next.map(k=>'<span class="nextUnitTag">'+(UNIT_LABELS[k]||k)+'</span>').join(''):'<span class="nextUnitTag">なし（最後の単元）</span>';
+  document.getElementById('prereqTags').innerHTML=prereqHtml;
+  document.getElementById('nextUnitTags').innerHTML=nextHtml;
+}
+function jumpToPrereq(){
+  const u=unitType();
+  const map=PREREQ_MAP[u]||PREREQ_MAP.default;
+  if(!map.prereq.length) return;
+  const target=map.prereq[0];
+  for(const g of['elementary','middle','high']){
+    const found=UNIT_DATA[g].find(u=>u[0]===target);
+    if(found){gradeSelect.value=g;unitSelect.value=target;updatePanels();return}
+  }
+}
+function jumpToNext(){
+  const u=unitType();
+  const map=PREREQ_MAP[u]||PREREQ_MAP.default;
+  if(!map.next.length) return;
+  const target=map.next[0];
+  for(const g of['elementary','middle','high']){
+    const found=UNIT_DATA[g].find(u=>u[0]===target);
+    if(found){gradeSelect.value=g;unitSelect.value=target;updatePanels();return}
+  }
+}
+document.getElementById('jumpPrereq').onclick=jumpToPrereq;
+document.getElementById('jumpNext').onclick=jumpToNext;
+
+// ===== フェーズ1: 印刷ワークシート =====
+function refreshWorksheet(){
+  const task=taskObj();
+  const mode=document.querySelector('input[name="wsMode"]:checked').value;
+  document.getElementById('wsTask').innerHTML='<b>'+task.title+'</b><br>'+task.prompt;
+  if(mode==='fill'){
+    document.getElementById('wsMemo').innerHTML='［観察メモ欄］<br><span class="small">変わる量と変わらない量を書こう</span>';
+    document.getElementById('wsEvidence').innerHTML='［根拠カード欄］<br><span class="small">選んだ根拠を書こう</span>';
+    document.getElementById('wsProof').innerHTML='［証明欄］<br><span class="small">前提→根拠→結論の流れで書こう</span>';
+  } else {
+    document.getElementById('wsMemo').innerHTML='［メモ欄］';
+    document.getElementById('wsEvidence').innerHTML='［根拠欄］';
+    document.getElementById('wsProof').innerHTML='［証明欄］';
+  }
+  document.getElementById('wsFigure').innerHTML='［図のスペース］<br><span class="small">この課題の図をここに描こう</span>';
+}
+function printWorksheet(){window.print()}
+document.getElementById('refreshWorksheet').onclick=refreshWorksheet;
+document.getElementById('printWorksheet').onclick=printWorksheet;
+
+// updatePanelsに縦接続とワークシート更新を追加
+const origUpdatePanels=updatePanels;
+updatePanels=function(){
+  origUpdatePanels();
+  renderPrereq();
+  refreshWorksheet();
+};
+
+
+// ===== フェーズ2: 試行錯誤の記録 =====
+function analyzeTrials(){
+  if(!actionLog.length){document.getElementById('trialPanel').innerHTML='<div class="trialBox">まだ作図操作がありません</div>';return}
+  const trials=[];
+  let undoStreak=0;
+  let lastTool=null;
+  let toolSwitchCount=0;
+  for(let i=actionLog.length-1;i>=0;i--){
+    const e=actionLog[i];
+    if(e.kind==='undo'){undoStreak++;}
+    else if(e.kind==='tool'){
+      if(lastTool&&lastTool!==e.detail.tool) toolSwitchCount++;
+      lastTool=e.detail.tool;
+    }
+    else{undoStreak=0;}
+  }
+  const totalOps=actionLog.filter(e=>e.kind!=='tool'&&e.kind!=='undo').length;
+  const undoRate=totalOps?Math.round((undoCount||0)/totalOps*100):0;
+  if((undoCount||0)>=3) trials.push({type:'warning',text:'Undoが'+undoCount+'回あります。同じ操作で迷っている可能性があります。'});
+  if(toolSwitchCount>=4) trials.push({type:'info',text:'道具を頻繁に切り替えています（'+toolSwitchCount+'回）。目的を整理してから作図しましょう。'});
+  if(totalOps>0&&totalOps<3) trials.push({type:'info',text:'まだ作図の初期段階です。まず基本図形から始めましょう。'});
+  const memo=analyzeMemoText();
+  if(memo.score<2) trials.push({type:'info',text:'観察メモがまだ少ないです。図を動かしながら気づきを書き留めましょう。'});
+  const ev=selectedEvidence();
+  if(!ev.length) trials.push({type:'info',text:'根拠カードがまだ選ばれていません。証明に使えそうな性質を選んでみましょう。'});
+  if(!trials.length) trials.push({type:'good',text:'順調に作図が進んでいるようです。引き続き観察と記録を続けましょう。'});
+  document.getElementById('trialPanel').innerHTML=trials.map(t=>'<div class="trialBox '+(t.type==='warning'?'trialError':'')+'"><span class="trialTag">'+(t.type==='good'?'順調':t.type==='warning'?'注意':'ヒント')+'</span>'+t.text+'</div>').join('');
+}
+function exportTrials(){
+  const data={undoCount:undoCount||0,trialLog:trialLog||[],unit:unitObj()[1],task:taskObj().title,timestamp:new Date().toISOString()};
+  download('作図ノート_試行錯誤記録.json',new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));
+}
+document.getElementById('analyzeTrials').onclick=analyzeTrials;
+document.getElementById('exportTrials').onclick=exportTrials;
+
+// ===== フェーズ2: 学習履歴 =====
+const HISTORY_KEY='sakuzu_note_v7_history';
+function loadHistory(){
+  try{const raw=localStorage.getItem(HISTORY_KEY);return raw?JSON.parse(raw):[]}catch(e){return[]}
+}
+function saveHistoryEntry(){
+  const entries=loadHistory();
+  const entry={id:Date.now(),date:new Date().toLocaleString('ja-JP'),unit:unitObj()[1],task:taskObj().title,grade:gradeSelect.value,unitKey:unitSelect.value,memo:document.getElementById('memoText').value.slice(0,60),evidence:selectedEvidence(),state:getState()};
+  entries.unshift(entry);
+  if(entries.length>30) entries.pop();
+  try{localStorage.setItem(HISTORY_KEY,JSON.stringify(entries));renderHistory()}catch(e){alert('履歴の保存に失敗しました: '+e.message)}
+}
+function renderHistory(){
+  const entries=loadHistory();
+  const panel=document.getElementById('historyPanel');
+  if(!entries.length){panel.innerHTML='<div style="grid-column:1/-1;text-align:center;color:#94a3b8;font-size:12px">まだ履歴があません</div>';return}
+  panel.innerHTML=entries.map(e=>'<div class="historyItem" data-id="'+e.id+'"><div class="date">'+e.date+'</div><div><b>'+(e.unit||'')+'</b></div><div class="small">'+(e.task||'')+'</div><div class="small" style="color:#64748b">メモ:'+(e.memo||'なし').slice(0,15)+'</div></div>').join('');
+  panel.querySelectorAll('.historyItem').forEach(item=>{item.onclick=()=>{const id=Number(item.dataset.id);const ent=loadHistory().find(x=>x.id===id);if(ent&&ent.state){setState(ent.state);toast('履歴を復元しました: '+ent.date)}}});
+}
+function clearHistory(){try{localStorage.removeItem(HISTORY_KEY);renderHistory();toast('履歴をクリアしました')}catch(e){}}
+function exportHistory(){const entries=loadHistory();download('作図ノート_学習履歴.json',new Blob([JSON.stringify(entries,null,2)],{type:'application/json'}));}
+document.getElementById('saveHistory').onclick=saveHistoryEntry;
+document.getElementById('clearHistory').onclick=clearHistory;
+document.getElementById('exportHistory').onclick=exportHistory;
+
+// ===== フェーズ2: アクセシビリティ =====
+function applyColorblindMode(){
+  const on=document.getElementById('colorblindMode').checked;
+  document.body.classList.toggle('colorblind-mode',on);
+  if(on){
+    objs.forEach((o,i)=>{if(o.type==='point'){o.shape=['circle','triangle','square'][i%3]}});
+    render();
+    document.getElementById('accessStatus').textContent='色覚多様性モードON：点を形（●▲■）で区別します';
+  } else {
+    objs.forEach(o=>{if(o.type==='point') delete o.shape});
+    render();
+    document.getElementById('accessStatus').textContent='色覚多様性モードOFF';
+  }
+}
+function applyKeyboardMode(){
+  keyboardNav=document.getElementById('keyboardMode').checked;
+  document.getElementById('accessStatus').textContent=keyboardNav?'キーボード操作ON：Tabで点選択、Enterで確定、矢印で微調整':'キーボード操作OFF';
+}
+function speakFigure(){
+  const parts=[];
+  const pts=objs.filter(o=>o.type==='point');
+  const segs=objs.filter(o=>o.type==='segment');
+  const circles=objs.filter(o=>o.type==='circle');
+  if(pts.length) parts.push('点が'+pts.length+'個あります。'+pts.map(p=>p.name).join('、'));
+  if(segs.length) parts.push('線分が'+segs.length+'本あります。');
+  if(circles.length) parts.push('円が'+circles.length+'個あります。');
+  if(!parts.length) parts.push('まだ図形がありません');
+  const text='現在の図：'+parts.join('。');
+  if('speechSynthesis' in window){
+    const u=new SpeechSynthesisUtterance(text);u.lang='ja-JP';window.speechSynthesis.speak(u);
+    document.getElementById('accessStatus').textContent='音声読み上げ中…';
+  } else {
+    document.getElementById('accessStatus').textContent='このブラウザは音声読み上げに対応していません';
+  }
+}
+document.getElementById('colorblindMode').onchange=applyColorblindMode;
+document.getElementById('keyboardMode').onchange=applyKeyboardMode;
+document.getElementById('speakFigure').onclick=speakFigure;
+
+// キーボードイベント
+window.addEventListener('keydown',e=>{
+  if(!keyboardNav) return;
+  const pts=objs.filter(o=>o.type==='point');
+  if(!pts.length) return;
+  if(e.key==='Tab'){e.preventDefault();selectedObjIndex=(selectedObjIndex+1)%pts.length;render();}
+  if(e.key==='Enter'){e.preventDefault();if(selectedObjIndex>=0){const p=pts[selectedObjIndex];pending.push({type:'point',x:p.x,y:p.y,obj:p});clickStep();}}
+  const step=5;
+  if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)){e.preventDefault();if(selectedObjIndex>=0&&selectedObjIndex<pts.length){const p=pts[selectedObjIndex];if(e.key==='ArrowLeft') p.x-=step;if(e.key==='ArrowRight') p.x+=step;if(e.key==='ArrowUp') p.y-=step;if(e.key==='ArrowDown') p.y+=step;render();}}
+});
+
+
+// ===== フェーズ3: 協働モード（簡易版） =====
+const COLLAB_KEY='sakuzu_note_v7_collab';
+function toggleCollab(){
+  collabEnabled=!collabEnabled;
+  const status=document.getElementById('collabStatus');
+  if(collabEnabled){
+    status.innerHTML='<span class="collabPeer">●</span>協働モードON：自分の操作が共有されます';
+    try{localStorage.setItem(COLLAB_KEY,JSON.stringify({enabled:true,peer:'生徒A',updated:Date.now()}))}catch(e){}
+    toast('協働モードをONにしました');
+  } else {
+    status.textContent='協働モードはオフです';
+    try{localStorage.removeItem(COLLAB_KEY)}catch(e){}
+  }
+}
+function compareWithPeer(){
+  const diffPanel=document.getElementById('peerDiffPanel');
+  const myPoints=objs.filter(o=>o.type==='point').length;
+  const mySegs=objs.filter(o=>o.type==='segment').length;
+  const myCircles=objs.filter(o=>o.type==='circle').length;
+  diffPanel.innerHTML='<b>自分の現在の図：</b>点'+myPoints+'個、線分'+mySegs+'本、円'+myCircles+'個<br><span class="small">（※簡易版：同一ブラウザ内での比較です。別端末連携には外部サービスが必要です）</span>';
+}
+document.getElementById('toggleCollab').onclick=toggleCollab;
+document.getElementById('comparePeer').onclick=compareWithPeer;
+
+// ===== フェーズ3: 外部連携 =====
+function exportTikZ(){
+  const pts=objs.filter(o=>o.type==='point');
+  const segs=objs.filter(o=>o.type==='segment');
+  const rays=objs.filter(o=>o.type==='ray');
+  const lines=objs.filter(o=>o.type==='line');
+  const circles=objs.filter(o=>o.type==='circle');
+  const perps=objs.filter(o=>o.type==='perpendicular');
+  const paras=objs.filter(o=>o.type==='parallel');
+  const angles=objs.filter(o=>o.type==='angle');
+  const tangents=objs.filter(o=>o.type==='tangent');
+  let code=`% 作図ノートv8 TikZ出力
+\\begin{tikzpicture}[scale=0.05,line cap=round,line join=round]
+`;
+  // 座標定義
+  pts.forEach(p=>{code+=`  \\coordinate (${p.name}) at (${fmt(p.x)},${fmt(-p.y)}); % ${p.name}
+`;});
+  code+=`  % === 線分 ===
+`;
+  segs.forEach(s=>{const a=P(s.a),b=P(s.b);if(a&&b) code+=`  \\draw (${a.name}) -- (${b.name});
+`;});
+  if(rays.length){code+=`  % === 半直線 ===
+`; rays.forEach(r=>{const a=P(r.a),b=P(r.b);if(a&&b) code+=`  \\draw[->] (${a.name}) -- (${b.name}); % 半直線 ${a.name}${b.name}
+`;});}
+  if(lines.length){code+=`  % === 直線 ===
+`; lines.forEach(l=>{const a=P(l.a),b=P(l.b);if(a&&b) code+=`  \\draw[extend] (${a.name}) -- (${b.name}); % 直線 ${a.name}${b.name}
+`;});}
+  if(circles.length){code+=`  % === 円 ===
+`; circles.forEach(c=>{const center=P(c.center);if(center) code+=`  \\draw (${center.name}) circle (${fmt(c.r)}); % 中心${center.name} 半径${fmt(c.r)}
+`;});}
+  if(perps.length){code+=`  % === 垂線 ===
+`; perps.forEach(p=>{const base=P(p.base),pt=P(p.point);if(base&&pt) code+=`  \\draw (${base.name}) -- (${pt.name}) node[midway,sloped] {\\tiny $\\perp$}; % 垂線
+`;});}
+  if(paras.length){code+=`  % === 平行線 ===
+`; paras.forEach(p=>{const a=P(p.a),b=P(p.b);if(a&&b) code+=`  \\draw (${a.name}) -- (${b.name}) node[midway,sloped] {\\tiny $/$\\!/$}; % 平行線
+`;});}
+  if(angles.length){code+=`  % === 角 ===
+`; angles.forEach(ang=>{const a=P(ang.a),v=P(ang.vertex),b=P(ang.b);if(a&&v&&b) code+=`  \\pic [draw,angle radius=${fmt(ang.r||12)},"\\textsf{\\small ${fmtAng(ang.value)}}"] {angle=(${a.name})--(${v.name})--(${b.name})};
+`;});}
+  if(tangents.length){code+=`  % === 接線 ===
+`; tangents.forEach(t=>{const p=P(t.point),c=P(t.center);if(p&&c) code+=`  \\draw (${p.name}) -- ++(${fmt(t.dx||30)},${fmt(t.dy||0)}); % 接線（点${p.name}、中心${c.name}）
+`;});}
+  // 測定値注釈
+  const anns=objs.filter(o=>o.type==='annotation');
+  if(anns.length){code+=`  % === 注釈 ===
+`; anns.forEach(a=>{code+=`  \\node at (${fmt(a.x)},${fmt(-a.y)}) {${a.text}};
+`;});}
+  code+=`\\end{tikzpicture}
+
+% 使用例：\\usepackage{tikz}; \\usetikzlibrary{angles,quotes,arrows.meta}`;
+  document.getElementById('externalOutput').textContent=code;
+  toast('TikZコードを生成しました（拡張版）');
+}
+function fmt(n){return (Math.round((n||0)*10)/10).toFixed(1).replace('.0','');}
+function fmtAng(v){if(!v)return '?'; return Math.round(v*10)/10+'°';}
+function exportLMS(){
+  const data={studentName:document.getElementById('studentName').value||'匿名',className:document.getElementById('classSelect').value||'',unit:unitObj()[1],task:taskObj().title,memo:document.getElementById('memoText').value,evidence:selectedEvidence(),rubric:rubricData(),submittedAt:new Date().toISOString(),format:'sakuzu-note-v7'};
+  document.getElementById('externalOutput').textContent=JSON.stringify(data,null,2);
+  toast('LMS提出形式を生成しました');
+}
+function refGeoGebra(){
+  const url=prompt('GeoGebraの図URLを貼り付けてください（例: https://www.geogebra.org/classic#matrix/...）');
+  if(url){
+    document.getElementById('externalOutput').innerHTML='GeoGebra参照URL：<a href="'+url+'" target="_blank">'+url+'</a><br><span class="small">（別タブでGeoGebraを開きます。作図ノート上での直接表示は未対応です）</span>';
+    toast('GeoGebra参照を設定しました');
+  }
+}
+document.getElementById('exportTikZ').onclick=exportTikZ;
+document.getElementById('exportLMS').onclick=exportLMS;
+document.getElementById('refGeoGebra').onclick=refGeoGebra;
+
+// ===== フェーズ3: 初期化 =====
+renderHistory();
+
+
+// ===== フェーズ3: 協働共有の強化 =====
+const COLLAB_STATE_KEY='sakuzu_note_v8_collab_state';
+const COLLAB_LOG_KEY='sakuzu_note_v8_collab_log';
+let collabLastState=null;
+let collabLog=[];
+
+function getCollabState(){return {objs:JSON.parse(JSON.stringify(objs)),measures:JSON.parse(JSON.stringify(measures)),idc,namec,unit:unitSelect.value,grade:gradeSelect.value,timestamp:Date.now(),role:document.getElementById('myRole').value||'生徒A'}}
+function saveCollabState(){if(!collabEnabled)return;const s=getCollabState();try{localStorage.setItem(COLLAB_STATE_KEY,JSON.stringify(s))}catch(e){}}
+function loadCollabState(){try{const raw=localStorage.getItem(COLLAB_STATE_KEY);return raw?JSON.parse(raw):null}catch(e){return null}}
+function loadCollabLog(){try{const raw=localStorage.getItem(COLLAB_LOG_KEY);return raw?JSON.parse(raw):[]}catch(e){return[]}}
+function saveCollabLog(){try{localStorage.setItem(COLLAB_LOG_KEY,JSON.stringify(collabLog.slice(-100)))}catch(e){}}
+function addCollabLog(action,peer,detail){collabLog.push({time:new Date().toLocaleString('ja-JP'),action,peer,detail});saveCollabLog();renderCollabLog()}
+
+function toggleCollab(){
+  collabEnabled=!collabEnabled;
+  const status=document.getElementById('collabStatus');
+  const myName=document.getElementById('myRole').value||'生徒A';
+  if(collabEnabled){
+    status.innerHTML='<span class="collabPeer">● '+myName+'</span>協働モードON：操作が共有されます';
+    saveCollabState();
+    addCollabLog('参加',myName,myName+'が協働を開始しました');
+    startCollabSync();
+    toast('協働モードをONにしました');
+  } else {
+    status.textContent='協働モードはオフです';
+    stopCollabSync();
+    addCollabLog('退出',myName,myName+'が協働を終了しました');
+  }
+}
+
+let collabSyncTimer=null;
+function startCollabSync(){if(collabSyncTimer)clearInterval(collabSyncTimer);collabSyncTimer=setInterval(syncCollab,2000)}
+function stopCollabSync(){if(collabSyncTimer){clearInterval(collabSyncTimer);collabSyncTimer=null}}
+
+function syncCollab(){
+  if(!collabEnabled)return;
+  const peerState=loadCollabState();
+  if(!peerState||peerState.timestamp===(collabLastState&&collabLastState.timestamp))return;
+  if(peerState.role===(document.getElementById('myRole').value||'生徒A'))return; // 自分の更新は無視
+  collabLastState=peerState;
+  const peerName=peerState.role||'相手';
+  const diffs=diffStates(getCollabState(),peerState);
+  if(diffs.length){
+    addCollabLog('更新検出',peerName,diffs.join('、'));
+    document.getElementById('peerDiffPanel').innerHTML='<b>'+peerName+'の変更：</b><br>'+diffs.map(d=>'<span class="'+(d.type==='added'?'peerAdded':d.type==='removed'?'peerRemoved':'peerModified')+'">'+(d.type==='added'?'＋ ':d.type==='removed'?'－ ':'→ ')+d.text+'</span>').join('<br>');
+  }
+}
+
+function diffStates(localS,remoteS){
+  const diffs=[];
+  if(localS.unit!==remoteS.unit) diffs.push({type:'modified',text:'単元が変更：'+UNIT_DATA[localS.grade||'middle'].find(u=>u[0]===localS.unit)?.[1]+' → '+UNIT_DATA[remoteS.grade||'middle'].find(u=>u[0]===remoteS.unit)?.[1]});
+  const localPts=(localS.objs||[]).filter(o=>o.type==='point').length;
+  const remotePts=(remoteS.objs||[]).filter(o=>o.type==='point').length;
+  if(localPts!==remotePts) diffs.push({type:remotePts>localPts?'added':'removed',text:'点：'+localPts+'個 → '+remotePts+'個'});
+  const localSegs=(localS.objs||[]).filter(o=>o.type==='segment').length;
+  const remoteSegs=(remoteS.objs||[]).filter(o=>o.type==='segment').length;
+  if(localSegs!==remoteSegs) diffs.push({type:remoteSegs>localSegs?'added':'removed',text:'線分：'+localSegs+'本 → '+remoteSegs+'本'});
+  const localCircles=(localS.objs||[]).filter(o=>o.type==='circle').length;
+  const remoteCircles=(remoteS.objs||[]).filter(o=>o.type==='circle').length;
+  if(localCircles!==remoteCircles) diffs.push({type:remoteCircles>localCircles?'added':'removed',text:'円：'+localCircles+'個 → '+remoteCircles+'個'});
+  if(!diffs.length) diffs.push({type:'modified',text:'図に細かな変更がありました'});
+  return diffs;
+}
+
+function compareWithPeer(){
+  const peerState=loadCollabState();
+  const myName=document.getElementById('myRole').value||'生徒A';
+  const peerName=document.getElementById('peerRole').value||'生徒B';
+  if(!peerState){document.getElementById('peerDiffPanel').innerHTML='<span style="color:#94a3b8">相手のデータがまだありません。別タブで協働モードONにしてください。</span>';return}
+  const myPts=objs.filter(o=>o.type==='point').length;
+  const mySegs=objs.filter(o=>o.type==='segment').length;
+  const myCircles=objs.filter(o=>o.type==='circle').length;
+  const peerPts=(peerState.objs||[]).filter(o=>o.type==='point').length;
+  const peerSegs=(peerState.objs||[]).filter(o=>o.type==='segment').length;
+  const peerCircles=(peerState.objs||[]).filter(o=>o.type==='circle').length;
+  document.getElementById('peerDiffPanel').innerHTML=
+    '<table style="width:100%;font-size:11px;border-collapse:collapse"><tr style="background:#f8fafc"><th></th><th>'+myName+'</th><th>'+peerName+'</th></tr>'+
+    '<tr><td>点</td><td>'+myPts+'個</td><td>'+peerPts+'個</td></tr>'+
+    '<tr><td>線分</td><td>'+mySegs+'本</td><td>'+peerSegs+'本</td></tr>'+
+    '<tr><td>円</td><td>'+myCircles+'個</td><td>'+peerCircles+'個</td></tr></table>';
+}
+
+function mergePeerState(){
+  const peerState=loadCollabState();
+  const peerName=document.getElementById('peerRole').value||'生徒B';
+  if(!peerState){toast('相手のデータがありません');return}
+  if(peerState.objs&&peerState.objs.length){
+    objs=JSON.parse(JSON.stringify(peerState.objs));
+    measures=JSON.parse(JSON.stringify(peerState.measures||[]));
+    idc=peerState.idc||idc;
+    namec=peerState.namec||namec;
+    render();
+    updateReadout();
+    addCollabLog('取込',peerName,peerName+'の図を取り込みました');
+    toast(peerName+'の図を取り込みました');
+  }
+}
+
+function renderCollabLog(){
+  const panel=document.getElementById('collabLogPanel');
+  if(!collabLog.length){panel.innerHTML='<div style="color:#94a3b8">協働ログがここに表示されます</div>';return}
+  panel.innerHTML=collabLog.slice(-20).map(e=>'<div class="collabLogEntry"><span class="collabLogTime">'+e.time.split(' ')[1]+'</span><span class="collabLogPeer">'+e.peer+'</span><span class="collabLogAction">'+e.action+'：'+e.detail+'</span></div>').join('');
+  panel.scrollTop=panel.scrollHeight;
+}
+
+function clearCollabLog(){collabLog=[];saveCollabLog();renderCollabLog();toast('協働ログをクリアしました')}
+function exportCollab(){download('作図ノート_協働記録.json',new Blob([JSON.stringify({log:collabLog,myRole:document.getElementById('myRole').value,peerRole:document.getElementById('peerRole').value,exportedAt:new Date().toISOString()},null,2)],{type:'application/json'}))}
+
+// 操作時に自動保存（協働モードON時）
+const origRecordAction=recordAction;
+recordAction=function(kind,detail={}){
+  origRecordAction(kind,detail);
+  if(collabEnabled) saveCollabState();
+};
+
+// イベント設定
+document.getElementById('toggleCollab').onclick=toggleCollab;
+document.getElementById('comparePeer').onclick=compareWithPeer;
+document.getElementById('mergePeer').onclick=mergePeerState;
+document.getElementById('clearCollabLog').onclick=clearCollabLog;
+document.getElementById('exportCollab').onclick=exportCollab;
+
+// 初期化
+collabLog=loadCollabLog();
+renderCollabLog();
+
+</script>
+</body>
+</html>
